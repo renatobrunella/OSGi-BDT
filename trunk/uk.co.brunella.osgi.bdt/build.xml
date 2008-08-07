@@ -33,6 +33,7 @@
 	<target name="clean">
 		<delete dir="${bin.dir}" />
 		<delete dir="${dist.dir}" />
+		<delete file="${lib.dir}/uk.co.brunella.osgi.bdt.support.jar" />
 	</target>
 
 	<target name="build" depends="init">
