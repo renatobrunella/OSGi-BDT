@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<antlib>
+	<taskdef name="osgi-create" classname="uk.co.brunella.osgi.bdt.tasks.OSGiCreate" />
+	<taskdef name="osgi-deploy" classname="uk.co.brunella.osgi.bdt.tasks.OSGiDeploy" />
+	<taskdef name="osgi-undeploy" classname="uk.co.brunella.osgi.bdt.tasks.OSGiUndeploy" />
+	<taskdef name="osgi-list" classname="uk.co.brunella.osgi.bdt.tasks.OSGiList" />
+	<taskdef name="osgi-manifest" classname="uk.co.brunella.osgi.bdt.tasks.OSGiManifestReader" />
+	<taskdef name="osgi-test" classname="uk.co.brunella.osgi.bdt.tasks.OSGiTest" />
+	<typedef name="osgi-path" classname="uk.co.brunella.osgi.bdt.types.OSGiPath" />
+</antlib>
