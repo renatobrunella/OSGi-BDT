@@ -26,7 +26,9 @@ import java.io.ObjectInputStream;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
@@ -59,6 +61,7 @@ public class OSGiTestRunner {
   private List<OSGiBundleDescriptor> requiredBundles;
   private List<OSGiBundleDescriptor> testBundles;
   private List<String> arguments;
+  private Map<String, String> testParameters;
 
   public OSGiTestRunner() {
     frameworkStarter = OSGiFrameworkStarterFactory.create("equinox");
@@ -66,6 +69,7 @@ public class OSGiTestRunner {
     requiredBundles = new ArrayList<OSGiBundleDescriptor>();
     testBundles = new ArrayList<OSGiBundleDescriptor>();
     arguments = new ArrayList<String>();
+    testParameters = new HashMap<String, String>();
   }
 
   public void setRepositoryDirectory(String repositoryDirectory) {
@@ -93,6 +97,14 @@ public class OSGiTestRunner {
     testBundles.add(new OSGiBundleDescriptor(bundleSymbolicName, parseVersionRange(bundleVersionRange)));
   }
 
+  public void resetTestParameters() {
+    testParameters.clear();
+  }
+  
+  public void addTestParameter(String name, String value) {
+    testParameters.put(name, value);
+  }
+  
   private static VersionRange parseVersionRange(String bundleVersionRange) {
     if (bundleVersionRange == null) {
       bundleVersionRange = "";
@@ -124,6 +136,7 @@ public class OSGiTestRunner {
           bundleList.add(bundle);
         }
       }
+      
       List<Object> testBundleList = new ArrayList<Object>();
       for (OSGiBundleDescriptor descriptor : testBundles) {
         Object bundle = installBundle(systemBundleContext, descriptor);
@@ -135,6 +148,12 @@ public class OSGiTestRunner {
       for (Object bundle : bundleList) {
         BundleWrapper.start(bundle);
       }
+      
+      // set the test parameters
+      if (testParameters.size() > 0) {
+        setTestParameters(BundleWrapper.getBundleContext(testRunnerBundle));
+      }
+
       // start the test bundles
       for (Object bundle : testBundleList) {
         BundleWrapper.start(bundle);
@@ -229,13 +248,12 @@ public class OSGiTestRunner {
   }
 
   @SuppressWarnings("unchecked")
-  private List<OSGiTestResult> getTestResults(Object systemBundleContext) throws Exception {
-    Object reference = BundleContextWrapper.getServiceReference(systemBundleContext, OSGiTestResultService.class.getName());
-    Object service = BundleContextWrapper.getService(systemBundleContext, reference);
-//    Object service = systemBundleContext.getService(systemBundleContext.getServiceReference(OSGiTestResultService.class.getName()));
+  private List<OSGiTestResult> getTestResults(Object bundleContext) throws Exception {
+    Object reference = BundleContextWrapper.getServiceReference(bundleContext, OSGiTestResultService.class.getName());
+    Object service = BundleContextWrapper.getService(bundleContext, reference);
     Method getTestResultsMethod = service.getClass().getDeclaredMethod("getTestResults");
     byte[] serialized = (byte[]) getTestResultsMethod.invoke(service);
-    BundleContextWrapper.ungetService(systemBundleContext, reference);
+    BundleContextWrapper.ungetService(bundleContext, reference);
     
     ByteArrayInputStream bais = null;
     ObjectInputStream ois = null;
@@ -247,6 +265,14 @@ public class OSGiTestRunner {
       ois.close();
       bais.close();
     }
+  }
+  
+  private void setTestParameters(Object bundleContext) throws Exception {
+    Object reference = BundleContextWrapper.getServiceReference(bundleContext, OSGiTestResultService.class.getName());
+    Object service = BundleContextWrapper.getService(bundleContext, reference);
+    Method setTestParametersMethod = service.getClass().getDeclaredMethod("setTestParameters", Map.class);
+    setTestParametersMethod.invoke(service, testParameters);
+    BundleContextWrapper.ungetService(bundleContext, reference);
   }
 
   private static class OSGiBundleDescriptor {
