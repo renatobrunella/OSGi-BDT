@@ -26,6 +26,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.osgi.framework.BundleActivator;
@@ -46,6 +47,7 @@ public class Activator implements BundleActivator, ServiceListener, OSGiTestResu
   private Set<ServiceReference> registeredServices = new HashSet<ServiceReference>();
   private ErrorLogListener errorLogListener;
   private List<OSGiTestResult> testResults = new ArrayList<OSGiTestResult>();
+  private Map<String, String> testParameters;
 
   public Activator() {
     instance = this;
@@ -106,6 +108,15 @@ public class Activator implements BundleActivator, ServiceListener, OSGiTestResu
   }
 
   protected void runTests(OSGiTestCase testService) {
+    // set test parameters
+    if (testParameters != null && testService instanceof OSGiTestParameter) {
+      try {
+        ((OSGiTestParameter)testService).setParameters(testParameters);
+      } catch (Exception e) {
+        // ignore
+      }
+    }
+    
     try {
       Method setUp = testService.getClass().getDeclaredMethod("setUp");
       setUp.invoke(testService);
@@ -184,4 +195,7 @@ public class Activator implements BundleActivator, ServiceListener, OSGiTestResu
     }
   }
 
+  public void setTestParameters(Map<String, String> parameters) {
+    this.testParameters = parameters;
+  }
 }

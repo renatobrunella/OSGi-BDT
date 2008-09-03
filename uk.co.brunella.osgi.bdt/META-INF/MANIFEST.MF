@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: OSGi Repository Plug-in
 Bundle-SymbolicName: uk.co.brunella.osgi.bdt; singleton:=true
-Bundle-Version: 1.2.2
+Bundle-Version: 1.4.0
 Bundle-Activator: uk.co.brunella.osgi.bdt.plugin.Activator
 Bundle-Vendor: brunella ltd
 Require-Bundle: org.eclipse.ui,

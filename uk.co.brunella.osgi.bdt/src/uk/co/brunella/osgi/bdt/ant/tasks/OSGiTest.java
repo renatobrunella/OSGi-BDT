@@ -39,6 +39,7 @@ public class OSGiTest extends AbstractOSGiTask {
   private String outputFormat;
   private String outputDirectory;
   private String failurePropertyName;
+  private ParameterList parameters = new ParameterList();
 
   public void execute() {
     // Workaround to run ant from Eclipse. Otherwise we get an error while starting the first bundle:
@@ -63,6 +64,10 @@ public class OSGiTest extends AbstractOSGiTask {
       for (BundleDescriptor bundle : testBundles.getBundleDescriptors()) {
         runner.addTestBundle(bundle.getName(), bundle.getVersion());
       }
+      for (Parameter parameter : parameters.getParameters()) {
+        runner.addTestParameter(parameter.getName(), parameter.getValue());
+      }
+      
       try {
         List<OSGiTestResult> results;
         PrintStream oldOutStream = System.out;
@@ -147,6 +152,11 @@ public class OSGiTest extends AbstractOSGiTask {
     return testBundles;
   }
   
+  public ParameterList createParameters() {
+    parameters = new ParameterList();
+    return parameters;
+  }
+  
   public static class BundleDescriptor {
 
     private String name;
@@ -181,6 +191,40 @@ public class OSGiTest extends AbstractOSGiTask {
     
     public List<BundleDescriptor> getBundleDescriptors() {
       return bundleDescriptors;
+    }
+  }
+  
+  public static class ParameterList {
+    
+    private List<Parameter> parameters = new ArrayList<Parameter>();
+    
+    public Parameter createParameter() {
+      Parameter parameter = new Parameter();
+      parameters.add(parameter);
+      return parameter;
+    }
+    
+    public List<Parameter> getParameters() {
+      return parameters;
+    }
+  }
+  
+  public static class Parameter {
+    
+    private String name;
+    private String value;
+    
+    public String getName() {
+      return name;
+    }
+    public void setName(String name) {
+      this.name = name;
+    }
+    public String getValue() {
+      return value;
+    }
+    public void setValue(String value) {
+      this.value = value;
     }
   }
   
