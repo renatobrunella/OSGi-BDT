@@ -43,7 +43,9 @@ public class OSGiTestCase extends Fixture {
     } else if ("runner".equals(action)) {
       setRunnerBundle(cells);
     } else if ("parameter".equals(action)) {
-      setParameter(cells);
+      addParameter(cells);
+    } else if ("reset".equals(action)) {
+      resetParameters();
     } else if ("test".equals(action)) {
       addTest(cells);
     } else if ("run".equals(action) || "run tests".equals(action)) {
@@ -114,7 +116,7 @@ public class OSGiTestCase extends Fixture {
     testRunner.setTestRunnerBundle(bundleSymbolicName, versionRange);
   }
 
-  private void setParameter(Parse cells) {
+  private void addParameter(Parse cells) {
     if (cells.size() != 3) {
       exception(cells, new RuntimeException("Invalid number of columns"));
     }
@@ -122,6 +124,10 @@ public class OSGiTestCase extends Fixture {
     String value = cells.at(2).text();
 
     testRunner.addTestParameter(name, value);
+  }
+
+  private void resetParameters() {
+    testRunner.resetTestParameters();
   }
 
   private void addTest(Parse cells) {
