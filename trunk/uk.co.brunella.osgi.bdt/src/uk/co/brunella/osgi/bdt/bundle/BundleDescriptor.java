@@ -18,14 +18,21 @@
  */
 package uk.co.brunella.osgi.bdt.bundle;
 
-import static org.osgi.framework.Constants.*;
+import static org.osgi.framework.Constants.BUNDLE_CLASSPATH;
 import static org.osgi.framework.Constants.BUNDLE_MANIFESTVERSION;
 import static org.osgi.framework.Constants.BUNDLE_SYMBOLICNAME;
 import static org.osgi.framework.Constants.BUNDLE_VERSION;
+import static org.osgi.framework.Constants.BUNDLE_VERSION_ATTRIBUTE;
 import static org.osgi.framework.Constants.EXPORT_PACKAGE;
+import static org.osgi.framework.Constants.FRAGMENT_HOST;
 import static org.osgi.framework.Constants.IMPORT_PACKAGE;
-import static org.osgi.framework.Constants.VERSION_ATTRIBUTE;
 import static org.osgi.framework.Constants.PACKAGE_SPECIFICATION_VERSION;
+import static org.osgi.framework.Constants.REQUIRE_BUNDLE;
+import static org.osgi.framework.Constants.RESOLUTION_DIRECTIVE;
+import static org.osgi.framework.Constants.RESOLUTION_MANDATORY;
+import static org.osgi.framework.Constants.VERSION_ATTRIBUTE;
+import static org.osgi.framework.Constants.VISIBILITY_DIRECTIVE;
+import static org.osgi.framework.Constants.VISIBILITY_REEXPORT;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -457,5 +464,9 @@ public class BundleDescriptor implements Serializable {
   
   public VersionRange getFragmentHostVersionRange() {
     return fragmentHostVersionRange;
+  }
+    
+  public String toString() {
+    return bundleSymbolicName + " [" + bundleVersion + "]";
   }
 }
