@@ -90,10 +90,11 @@ public class BundleRepository implements Serializable {
     BundleDescriptor descriptor = null;
     for (int i = 0; i < bundleDescriptors.size(); i++) {
       descriptor = bundleDescriptors.get(i);
-      if (descriptor.getBundleSymbolicName().equals(bundleSymbolicName)
-          && descriptor.getBundleVersion().equals(bundleVersion)) {
-        index = i;
-        break;
+      if (descriptor.getBundleSymbolicName().equals(bundleSymbolicName)) {
+        if (bundleVersion == null || descriptor.getBundleVersion().equals(bundleVersion)) {
+          index = i;
+          break;
+        }
       }
     }
     if (index >= 0) {

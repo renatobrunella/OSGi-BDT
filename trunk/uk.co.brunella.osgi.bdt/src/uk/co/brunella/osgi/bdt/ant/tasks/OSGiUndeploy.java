@@ -42,7 +42,7 @@ public class OSGiUndeploy extends AbstractOSGiTask {
     Deployer deployer = new Deployer(repository);
     deployer.setVerbose(verbose);
     try {
-      Version bundleVersion = Version.parseVersion(version);
+      Version bundleVersion = version == null ? null : Version.parseVersion(version);
       deployer.undeploy(bundleName, bundleVersion);
       log(deployer.getLogMessages());
     } catch (IOException e) {
