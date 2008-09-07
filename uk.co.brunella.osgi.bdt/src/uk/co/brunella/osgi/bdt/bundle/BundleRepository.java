@@ -34,6 +34,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor.ExportPackage;
+import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor.ImportPackage;
 
 public class BundleRepository implements Serializable {
 
@@ -61,6 +62,7 @@ public class BundleRepository implements Serializable {
     this.profileName = profileName;
     bundleDescriptors = new ArrayList<BundleDescriptor>();
     readSystemPackages();
+    exportedPackages = new HashMap<String, List<ExportPackage>>();
   }
 
   private void readSystemPackages() {
@@ -74,6 +76,7 @@ public class BundleRepository implements Serializable {
 
   public void addBundleDescriptor(BundleDescriptor descriptor) {
     bundleDescriptors.add(descriptor);
+    addExportPackages(descriptor);
   }
   
   public List<BundleDescriptor> getBundleDescriptors() {
@@ -193,6 +196,22 @@ public class BundleRepository implements Serializable {
       }});
     return result;
   }
+  
+  public Set<BundleDescriptor> getBundleDependencies(BundleDescriptor descriptor) {
+    //TODO add requireBundles
+    Set<BundleDescriptor> dependencies = new HashSet<BundleDescriptor>();
+    for (ImportPackage importPackage : descriptor.getImportPackages()) {
+      ExportPackage[] exportPackages = resolve(importPackage.getName(), importPackage.getVersionRange(), true);
+      if (exportPackages.length > 0) {
+        BundleDescriptor exportBundle = exportPackages[0].getBundleDescriptor();
+        if (exportBundle != null) {
+          dependencies.add(exportBundle);
+        }
+      }
+    }
+    return dependencies;
+  }
+
   
   private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
     ois.defaultReadObject();
