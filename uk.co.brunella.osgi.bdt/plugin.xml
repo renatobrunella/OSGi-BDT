@@ -71,6 +71,15 @@
       </antTask>
    </extension>
    <extension
+         point="org.eclipse.ant.core.antTasks">
+      <antTask
+            class="uk.co.brunella.osgi.bdt.tasks.OSGiBuild"
+            library="lib/uk.co.brunella.osgi.bdt.support.jar"
+            eclipseRuntime="false"
+            name="osgi-build">
+      </antTask>
+   </extension>
+   <extension
          point="org.eclipse.ant.core.antTypes">
       <antType
             class="uk.co.brunella.osgi.bdt.types.OSGiPath"
