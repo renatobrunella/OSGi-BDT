@@ -98,14 +98,20 @@ public class Deployer {
     }
   }
 
-  public boolean undeploy(String bundleSymbolicName, VersionRange bundleVersion) throws IOException {
+  public boolean undeploy(String bundleSymbolicName, Version bundleVersion) throws IOException {
+    VersionRange bundleVersionRange = VersionRange.parseVersionRange(
+        "[" + bundleVersion + "," + bundleVersion + "]");
+    return undeploy(bundleSymbolicName, bundleVersionRange);
+  }
+
+  public boolean undeploy(String bundleSymbolicName, VersionRange bundleVersionRange) throws IOException {
     logClear();
-    log("Undeploying bundle " + bundleSymbolicName + " [" + bundleVersion + "]");
+    log("Undeploying bundle " + bundleSymbolicName + " " + bundleVersionRange);
     // try to lock the repository
     if (persister.lock(MAX_WAIT_TIME_IN_MILLIS)) {
       try {
         BundleRepository repository = persister.load();
-        BundleDescriptor descriptor = repository.removeBundleDescriptor(bundleSymbolicName, bundleVersion);
+        BundleDescriptor descriptor = repository.removeBundleDescriptor(bundleSymbolicName, bundleVersionRange);
         if (descriptor != null) {
           persister.save(repository);
           File bundleJar = new File(bundleDirectory, descriptor.getBundleJarFileName());
