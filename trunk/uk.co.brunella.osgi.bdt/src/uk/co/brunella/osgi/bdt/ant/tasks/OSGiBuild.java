@@ -34,6 +34,7 @@ import org.apache.tools.ant.types.DirSet;
 
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor;
 import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
+import uk.co.brunella.osgi.bdt.bundle.BundleRepositoryPersister;
 
 public class OSGiBuild extends AbstractOSGiTask {
 
@@ -45,9 +46,25 @@ public class OSGiBuild extends AbstractOSGiTask {
   private boolean fullRebuild = false;
   private boolean inheritDirty = false;
   private boolean verbose = false;
+  private BundleRepository buildRepository;
+  private BundleRepository deployRepository;
+  private long dirtyThreshold = 2000;
 
   public void execute() {
-    BundleRepository buildRepository = new BundleRepository("J2SE-1.5");
+    if (repository == null || fullRebuild) {
+      fullRebuild = true;
+    } else {
+      try {
+        deployRepository = new BundleRepositoryPersister(repository).load();
+      } catch (Exception e) {
+        throw new BuildException(e.getMessage(), e);
+      }
+    }
+    if (deployRepository != null) {
+      buildRepository = new BundleRepository(deployRepository.getProfileName());
+    } else {
+      buildRepository = new BundleRepository("J2SE-1.5");
+    }
     for (DirSet fileSet : projectDirectories) {
       DirectoryScanner ds = fileSet.getDirectoryScanner(getProject());
       String[] projectDirectories = ds.getIncludedDirectories();
@@ -64,15 +81,23 @@ public class OSGiBuild extends AbstractOSGiTask {
         if (!manifestFile.isFile()) {
           throw new BuildException(manifestFile + " does not exist or is not a file");
         }
-        BuildBundleDescriptor descriptor = createDescriptor(projectDirectory, buildFile, manifestFile, true);
+        BuildBundleDescriptor descriptor = createDescriptor(projectDirectory, buildFile, manifestFile);
         buildRepository.addBundleDescriptor(descriptor);
       }
     }
-    List<BuildBundleDescriptor> buildOrder = calculateBuildOrder(buildRepository);
-    for (BuildBundleDescriptor descriptor : buildOrder) {
-      System.out.println(descriptor);
+
+    List<BuildBundleDescriptor> buildOrder = calculateBuildOrder();
+    if (verbose) {
+      if (buildOrder.size() > 0) {
+        System.out.println("Build order:");
+        for (BuildBundleDescriptor descriptor : buildOrder) {
+          System.out.println(descriptor);
+        }
+      } else {
+        System.out.println("Nothing to build");
+      }
+      System.out.println();
     }
-    System.out.println();
     
     for (BuildBundleDescriptor descriptor : buildOrder) {
       Ant antTask = new Ant(this);
@@ -116,21 +141,28 @@ public class OSGiBuild extends AbstractOSGiTask {
     this.inheritDirty = inheritDirty;
   }
 
+  public void setDirtyThreshold(long dirtyThreshold) {
+    this.dirtyThreshold = dirtyThreshold;
+  }
+  
   public void setVerbose(boolean verbose) {
     this.verbose = verbose;
   }
 
-  private List<BuildBundleDescriptor> calculateBuildOrder(BundleRepository repository) {
+  private List<BuildBundleDescriptor> calculateBuildOrder() {
+    if (!fullRebuild) {
+      checkAndSetDirtyFlag();
+    }
     Set<BundleDescriptor> processed = new HashSet<BundleDescriptor>();
     Set<BundleDescriptor> processing = new HashSet<BundleDescriptor>();
     List<BuildBundleDescriptor> buildOrder = new ArrayList<BuildBundleDescriptor>();
-    for (BundleDescriptor descriptor : repository.getBundleDescriptors()) {
-      addToBuildOrder(repository, (BuildBundleDescriptor) descriptor, buildOrder, processed, processing);
+    for (BundleDescriptor descriptor : buildRepository.getBundleDescriptors()) {
+      addToBuildOrder((BuildBundleDescriptor) descriptor, buildOrder, processed, processing);
     }
     return buildOrder;
   }
 
-  private boolean addToBuildOrder(BundleRepository repository, BuildBundleDescriptor descriptor, List<BuildBundleDescriptor> buildOrder,
+  private boolean addToBuildOrder(BuildBundleDescriptor descriptor, List<BuildBundleDescriptor> buildOrder,
       Set<BundleDescriptor> processed, Set<BundleDescriptor> processing) {
     if (processed.contains(descriptor)) {
       return descriptor.isDirty();
@@ -140,9 +172,9 @@ public class OSGiBuild extends AbstractOSGiTask {
     }
     boolean isDirty = descriptor.isDirty();
     processing.add(descriptor);
-    Set<BundleDescriptor> dependencies = repository.getBundleDependencies(descriptor);
+    Set<BundleDescriptor> dependencies = buildRepository.getBundleDependencies(descriptor);
     for (BundleDescriptor dependency : dependencies) {
-      boolean dependencyIsDirty = addToBuildOrder(repository, (BuildBundleDescriptor) dependency, buildOrder, processed, processing); 
+      boolean dependencyIsDirty = addToBuildOrder((BuildBundleDescriptor) dependency, buildOrder, processed, processing); 
       isDirty = isDirty || dependencyIsDirty;
     }
     processing.remove(descriptor);
@@ -156,12 +188,12 @@ public class OSGiBuild extends AbstractOSGiTask {
     return isDirty;
   }
 
-  private BuildBundleDescriptor createDescriptor(File projectDirectory, File buildFile, File manifestFile, boolean isDirty) {
+  private BuildBundleDescriptor createDescriptor(File projectDirectory, File buildFile, File manifestFile) {
     FileInputStream fis = null;
     try {
       fis = new FileInputStream(manifestFile);
       Manifest manifest = new Manifest(fis);
-      return new BuildBundleDescriptor(projectDirectory, buildFile, manifest, isDirty);
+      return new BuildBundleDescriptor(projectDirectory, buildFile, manifest);
     } catch (IOException e) {
       e.printStackTrace();
       throw new RuntimeException(e.getMessage());
@@ -177,6 +209,45 @@ public class OSGiBuild extends AbstractOSGiTask {
     }
   }
   
+  private void checkAndSetDirtyFlag() {
+    for (BundleDescriptor descriptor : buildRepository.getBundleDescriptors()) {
+      BuildBundleDescriptor buildDescriptor = (BuildBundleDescriptor) descriptor;
+      // check if already deployed in deploy repository
+      BundleDescriptor deployedDescriptor = deployRepository.findBundleDescriptor(buildDescriptor.getBundleSymbolicName(), buildDescriptor.getBundleVersion());
+      if (deployedDescriptor != null) {
+        buildDescriptor.setDirty(isDirty(
+            new File(deployRepository.getLocation(), "bundles/" + deployedDescriptor.getBundleJarFileName()), 
+            buildDescriptor.getProjectDirectory()));
+      } else {
+        buildDescriptor.setDirty(true);
+      }
+    }
+  }
+  
+  private boolean isDirty(File deployedFile, File projectDirectory) {
+    long deployedTime = deployedFile.lastModified() + dirtyThreshold;
+    return isNewer(deployedTime, projectDirectory);
+  }
+  
+  private boolean isNewer(long oldTime, File directory) {
+    if (directory.lastModified() > oldTime) {
+      return true;
+    }
+    for (File file : directory.listFiles()) {
+      if (file.isDirectory()) {
+        if (isNewer(oldTime, file)) {
+          return true;
+        }
+      } else {
+        if (file.lastModified() > oldTime) {
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  }
+
   public static class BuildBundleDescriptor extends BundleDescriptor {
 
     private static final long serialVersionUID = 8482828526871445532L;
@@ -185,9 +256,9 @@ public class OSGiBuild extends AbstractOSGiTask {
     private File buildFile;
     private boolean isDirty;
     
-    public BuildBundleDescriptor(File projectDirectory, File buildFile, Manifest manifest, boolean isDirty) throws RuntimeException {
+    public BuildBundleDescriptor(File projectDirectory, File buildFile, Manifest manifest) throws RuntimeException {
       super("", manifest);
-      this.isDirty = isDirty;
+      this.isDirty = true;
       this.projectDirectory = projectDirectory;
       this.buildFile = buildFile;
     }
