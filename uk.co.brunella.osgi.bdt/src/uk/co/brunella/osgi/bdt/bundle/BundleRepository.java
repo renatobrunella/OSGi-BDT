@@ -88,16 +88,15 @@ public class BundleRepository implements Serializable {
     systemPackages.addAll(packageList);
   }
   
-  public BundleDescriptor removeBundleDescriptor(String bundleSymbolicName, Version bundleVersion) {
+  public BundleDescriptor removeBundleDescriptor(String bundleSymbolicName, VersionRange bundleVersionRange) {
     int index = -1;
     BundleDescriptor descriptor = null;
     for (int i = 0; i < bundleDescriptors.size(); i++) {
       descriptor = bundleDescriptors.get(i);
-      if (descriptor.getBundleSymbolicName().equals(bundleSymbolicName)) {
-        if (bundleVersion == null || descriptor.getBundleVersion().equals(bundleVersion)) {
-          index = i;
-          break;
-        }
+      if (descriptor.getBundleSymbolicName().equals(bundleSymbolicName) 
+          && bundleVersionRange.isIncluded(descriptor.getBundleVersion())) {
+        index = i;
+        break;
       }
     }
     if (index >= 0) {

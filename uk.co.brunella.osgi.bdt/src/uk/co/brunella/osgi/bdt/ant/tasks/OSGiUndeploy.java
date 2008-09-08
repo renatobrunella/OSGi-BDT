@@ -24,13 +24,14 @@ import java.io.IOException;
 import org.apache.tools.ant.BuildException;
 
 import uk.co.brunella.osgi.bdt.Deployer;
-import uk.co.brunella.osgi.bdt.bundle.Version;
+import uk.co.brunella.osgi.bdt.bundle.VersionRange;
 
 public class OSGiUndeploy extends AbstractOSGiTask {
 
   private File repository;
   private String bundleName;
   private String version = "";
+  private String range = "";
   private boolean verbose;
 
   public OSGiUndeploy() {
@@ -41,14 +42,21 @@ public class OSGiUndeploy extends AbstractOSGiTask {
   public void execute() {
     Deployer deployer = new Deployer(repository);
     deployer.setVerbose(verbose);
+    version = version.trim();
+    range = range.trim();
+    if (version.length() > 0 && range.length() > 0) {
+      throw new BuildException("Only version or range can be set not both");
+    }
     try {
-      Version bundleVersion = version == null ? null : Version.parseVersion(version);
-      deployer.undeploy(bundleName, bundleVersion);
+      if (version.length() > 0) {
+        range = "[" + version + "," + version + "]";
+      }
+      VersionRange bundleVersionRange = VersionRange.parseVersionRange(range);
+      deployer.undeploy(bundleName, bundleVersionRange);
       log(deployer.getLogMessages());
     } catch (IOException e) {
       throw new BuildException("Undeployment of bundle failed: " + e.getMessage());
     } catch (Throwable t) {
-      t.printStackTrace();
       throw new BuildException(t.getMessage());
     }
   }
@@ -63,6 +71,10 @@ public class OSGiUndeploy extends AbstractOSGiTask {
 
   public void setVersion(String version) {
     this.version = version;
+  }
+  
+  public void setRange(String range) {
+    this.range = range;
   }
   
   public void setVerbose(boolean verbose) {
