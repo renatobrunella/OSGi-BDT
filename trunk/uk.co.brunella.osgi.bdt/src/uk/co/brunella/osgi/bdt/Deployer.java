@@ -33,6 +33,7 @@ import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor;
 import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
 import uk.co.brunella.osgi.bdt.bundle.BundleRepositoryPersister;
 import uk.co.brunella.osgi.bdt.bundle.Version;
+import uk.co.brunella.osgi.bdt.bundle.VersionRange;
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor.ExportPackage;
 import uk.co.brunella.osgi.bdt.util.FileUtils;
 
@@ -97,7 +98,7 @@ public class Deployer {
     }
   }
 
-  public boolean undeploy(String bundleSymbolicName, Version bundleVersion) throws IOException {
+  public boolean undeploy(String bundleSymbolicName, VersionRange bundleVersion) throws IOException {
     logClear();
     log("Undeploying bundle " + bundleSymbolicName + " [" + bundleVersion + "]");
     // try to lock the repository
@@ -338,7 +339,8 @@ public class Deployer {
   
   private void updateRepository(BundleDescriptor descriptor) throws IOException {
     BundleRepository repository = persister.load();
-    repository.removeBundleDescriptor(descriptor.getBundleSymbolicName(), descriptor.getBundleVersion());
+    VersionRange versionRange = VersionRange.parseVersionRange("[" + descriptor.getBundleVersion() + "," + descriptor.getBundleVersion() + "]");
+    repository.removeBundleDescriptor(descriptor.getBundleSymbolicName(), versionRange);
     repository.addBundleDescriptor(descriptor);
     persister.save(repository);
   }
