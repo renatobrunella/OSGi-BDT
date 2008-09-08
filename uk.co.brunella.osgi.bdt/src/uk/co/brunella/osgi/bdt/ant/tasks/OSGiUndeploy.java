@@ -24,6 +24,7 @@ import java.io.IOException;
 import org.apache.tools.ant.BuildException;
 
 import uk.co.brunella.osgi.bdt.Deployer;
+import uk.co.brunella.osgi.bdt.bundle.Version;
 import uk.co.brunella.osgi.bdt.bundle.VersionRange;
 
 public class OSGiUndeploy extends AbstractOSGiTask {
@@ -49,10 +50,12 @@ public class OSGiUndeploy extends AbstractOSGiTask {
     }
     try {
       if (version.length() > 0) {
-        range = "[" + version + "," + version + "]";
+        Version bundleVersion = Version.parseVersion(version);
+        deployer.undeploy(bundleName, bundleVersion);
+      } else {
+        VersionRange bundleVersionRange = VersionRange.parseVersionRange(range);
+        deployer.undeploy(bundleName, bundleVersionRange);
       }
-      VersionRange bundleVersionRange = VersionRange.parseVersionRange(range);
-      deployer.undeploy(bundleName, bundleVersionRange);
       log(deployer.getLogMessages());
     } catch (IOException e) {
       throw new BuildException("Undeployment of bundle failed: " + e.getMessage());
