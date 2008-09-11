@@ -120,6 +120,13 @@
 				<attribute name="Implementation-Vendor" value="brunella ltd" />
 			</manifest>
 		</jar>
+		<zip destfile="${dist.dir}/uk.co.brunella.osgi.bdt-full-${version}.zip">
+			<fileset dir="${basedir}">
+				<include name="**"/>
+				<exclude name="dist/**"/>
+				<exclude name="bin/**"/>
+			</fileset>
+		</zip>
 	</target>
 	
 	<target name="dist" depends="clean,build,jar" />
