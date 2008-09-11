@@ -49,6 +49,8 @@ public class OSGiBuild extends AbstractOSGiTask {
   private BundleRepository buildRepository;
   private BundleRepository deployRepository;
   private long dirtyThreshold = 2000;
+  private boolean inheritAll = false;
+  private boolean inheritRefs = false;
 
   public void execute() {
     if (repository == null || fullRebuild) {
@@ -108,6 +110,8 @@ public class OSGiBuild extends AbstractOSGiTask {
       if (buildTarget != null) {
         antTask.setTarget(buildTarget);
       }
+      antTask.setInheritAll(inheritAll);
+      antTask.setInheritRefs(inheritRefs);
       antTask.execute();
     }
     
@@ -139,6 +143,14 @@ public class OSGiBuild extends AbstractOSGiTask {
 
   public void setInheritDirty(boolean inheritDirty) {
     this.inheritDirty = inheritDirty;
+  }
+  
+  public void setInheritAll(boolean inheritAll) {
+    this.inheritAll = inheritAll;
+  }
+  
+  public void setInheritRefs(boolean inheritRefs) {
+    this.inheritRefs = inheritRefs;
   }
 
   public void setDirtyThreshold(long dirtyThreshold) {
