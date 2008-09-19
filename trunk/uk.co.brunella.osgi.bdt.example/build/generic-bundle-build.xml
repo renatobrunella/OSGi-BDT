@@ -13,9 +13,7 @@
 	<taskdef name="osgi-test" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiTest" />
 	<typedef name="osgi-path" classname="uk.co.brunella.osgi.bdt.ant.types.OSGiPath" />
 
-	<property environment="env"/>
-
-	<property name="buildrepository.dir" value="${env.OSGI_REPOSITORY}" />
+	<property name="buildrepository.dir" value="${basedir}/../build/repository" />
 
 	<!-- read bundle symbolic name and version from manifest into properties bundle.name, bundle.version -->
 	<osgi-manifest manifest="${basedir}/META-INF/MANIFEST.MF" />

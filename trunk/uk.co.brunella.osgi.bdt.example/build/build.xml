@@ -3,8 +3,10 @@
 	
 	<!-- OSGi Ant taskdefs -->
 	<taskdef name="osgi-build" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiBuild" />
-
-	<property environment="env"/>
+	<taskdef name="osgi-create" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiCreate" />
+	<taskdef name="osgi-deploy" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiDeploy" />
+	
+	<property name="repository.dir" value="${basedir}/repository" />
 	
 	<property name="reports.dir" value="${basedir}/reports" />
 	<property name="reports.junit.dir" value="${reports.dir}/junit" />
@@ -17,7 +19,7 @@
 	
 	<target name="bundle-build">
 		<osgi-build manifestfile="./META-INF/MANIFEST.MF" buildfile="build.xml" buildtarget="repository-deploy"
-			inheritdirty="false" verbose="true" repository="${env.OSGI_REPOSITORY}" fullrebuild="${fullrebuild}" dirtythreshold="3000">
+			inheritdirty="false" verbose="true" repository="${repository.dir}" fullrebuild="${fullrebuild}" dirtythreshold="3000">
 			<dirset dir="${basedir}/..">
 				<include name="${bundle.name.prefix}*"/>
 				<exclude name="${bundle.name.test.prefix}*" />
@@ -35,7 +37,7 @@
 	
 	<target name="test-bundle-build">
 		<osgi-build manifestfile="./META-INF/MANIFEST.MF" buildfile="build.xml" buildtarget="repository-deploy"
-			inheritdirty="false" verbose="true" repository="${env.OSGI_REPOSITORY}" fullrebuild="${fullrebuild}" dirtythreshold="3000">
+			inheritdirty="false" verbose="true" repository="${repository.dir}" fullrebuild="${fullrebuild}" dirtythreshold="3000">
 			<dirset dir="${basedir}/..">
 				<include name="${bundle.name.test.prefix}*"/>
 			</dirset>
@@ -110,7 +112,14 @@
 	<target name="build-with-reports" depends="build-fullrebuild,junit-report,coverage-report" />
 
 	<target name="build-with-bootstrap">
-		<ant antfile="${basedir}/../Bootstrap/build.xml" dir="${basedir}/../Bootstrap" inheritall="false" inheritrefs="false" />
+		<delete dir="${basedir}/repository" />
+		<mkdir dir="${basedir}/repository"/>
+		<osgi-create repository="${repository.dir}" profilename="J2SE-1.5" />
+		<osgi-deploy repository="${repository.dir}">
+			<fileset dir="${basedir}/bundles">
+				<include name="*.jar" />
+			</fileset>
+		</osgi-deploy>
 		<antcall target="build-with-reports" />
 	</target>
 	
