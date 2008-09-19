@@ -87,7 +87,7 @@ public class Activator implements BundleActivator, ServiceListener, OSGiTestResu
       errorLogListener = ErrorLogListenerFactory.create(bundleContext);
       return errorLogListener;
     } catch (ClassNotFoundException e) {
-      e.printStackTrace();
+      // LogReaderService is not available
       return null;
     }
   }
