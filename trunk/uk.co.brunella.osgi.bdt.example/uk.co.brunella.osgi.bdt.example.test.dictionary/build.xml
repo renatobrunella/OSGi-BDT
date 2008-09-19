@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project name="dictionary.german" basedir="." default="run-integration-tests">
+
+	<import file="../build/generic-test-bundle-build.xml" />
+	
+</project>
