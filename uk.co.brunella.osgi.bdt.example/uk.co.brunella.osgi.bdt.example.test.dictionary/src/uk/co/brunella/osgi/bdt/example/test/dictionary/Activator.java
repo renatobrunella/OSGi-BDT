@@ -9,6 +9,7 @@ public class Activator implements BundleActivator {
 
   public void start(BundleContext context) throws Exception {
     OSGiTestCaseUtils.run(context, new GermanDictionaryTestCase(context));
+    OSGiTestCaseUtils.run(context, new FrenchDictionaryTestCase(context));
   }
 
   public void stop(BundleContext context) throws Exception {
