@@ -41,12 +41,21 @@ public class GermanDictionaryTestCase implements OSGiTestCase, OSGiTestParameter
     dictionaryTracker.close();
   }
   
-  @Description("Test that...")
+  @Description("Test that translates a german word into english")
   public void testLookup() throws Throwable {
     OSGiTestCaseUtils.waitForService(dictionaryTracker, 2000);
     DictionaryService service = (DictionaryService) dictionaryTracker.getService();
     assertNotNull(service);
     String word = service.lookup("Hund");
     assertEquals("dog", word);
+  }
+  
+  @Description("Test that translates an english word into german")
+  public void testInverseLookup() throws Throwable {
+    OSGiTestCaseUtils.waitForService(dictionaryTracker, 2000);
+    DictionaryService service = (DictionaryService) dictionaryTracker.getService();
+    assertNotNull(service);
+    String word = service.inverseLookup("cat");
+    assertEquals("katze", word);
   }
 }
