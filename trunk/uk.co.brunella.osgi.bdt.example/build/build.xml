@@ -2,9 +2,10 @@
 <project name="--- full build ---" basedir="." default="build">
 	
 	<!-- OSGi Ant taskdefs -->
-	<taskdef name="osgi-build" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiBuild" />
-	<taskdef name="osgi-create" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiCreate" />
-	<taskdef name="osgi-deploy" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiDeploy" />
+	<property name="bdt.jar" value="${basedir}/uk.co.brunella.osgi.bdt.support-1.5.1.jar" />
+	<taskdef name="osgi-build" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiBuild" classpath="${bdt.jar}" />
+	<taskdef name="osgi-create" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiCreate" classpath="${bdt.jar}" />
+	<taskdef name="osgi-deploy" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiDeploy" classpath="${bdt.jar}" />
 	
 	<property name="repository.dir" value="${basedir}/repository" />
 	
