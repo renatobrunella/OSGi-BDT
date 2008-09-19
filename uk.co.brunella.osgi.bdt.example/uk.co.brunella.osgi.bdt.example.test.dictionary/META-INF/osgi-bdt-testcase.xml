@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<test-case>
+	<required>
+		<bundle name="uk.co.brunella.osgi.bdt.example.dictionary" version="[1.0.0,2.0.0)" /> 
+		<bundle name="uk.co.brunella.osgi.bdt.example.dictionary.german" version="[1.0.0,2.0.0)" /> 
+	</required>
+</test-case>
