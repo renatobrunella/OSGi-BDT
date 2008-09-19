@@ -147,6 +147,9 @@ public class JUnitTestResultFormatter implements TestResultFormatter {
   }
 
   private String escape(String message) {
+    if (message == null) {
+      return "null";
+    }
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < message.length(); i++) {
       char c = message.charAt(i);
