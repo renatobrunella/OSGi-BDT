@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project name="--- full build ---" basedir="." default="build">
+	
+	<!-- OSGi Ant taskdefs -->
+	<taskdef name="osgi-build" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiBuild" />
+
+	<property environment="env"/>
+	
+	<property name="reports.dir" value="${basedir}/reports" />
+	<property name="reports.junit.dir" value="${reports.dir}/junit" />
+	<property name="reports.coverage.dir" value="${reports.dir}/coverage" />
+	<property name="bundle.dist.dir" value="${basedir}/dist" />
+	<property name="bundle.dist.test.dir" value="${basedir}/dist-test" />
+	
+	<property name="bundle.name.prefix" value="uk.co.brunella.osgi.bdt.example." />
+	<property name="bundle.name.test.prefix" value="uk.co.brunella.osgi.bdt.example.test." />
+	
+	<target name="bundle-build">
+		<osgi-build manifestfile="./META-INF/MANIFEST.MF" buildfile="build.xml" buildtarget="repository-deploy"
+			inheritdirty="false" verbose="true" repository="${env.OSGI_REPOSITORY}" fullrebuild="${fullrebuild}" dirtythreshold="3000">
+			<dirset dir="${basedir}/..">
+				<include name="${bundle.name.prefix}*"/>
+				<exclude name="${bundle.name.test.prefix}*" />
+			</dirset>
+		</osgi-build>
+		<delete dir="${bundle.dist.dir}" />
+		<mkdir dir="${bundle.dist.dir}" />
+		<copy todir="${bundle.dist.dir}" flatten="true">
+			<fileset dir="${basedir}/..">
+				<include name="${bundle.name.prefix}*/dist/*"/>
+				<exclude name="${bundle.name.test.prefix}*/**" />
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="test-bundle-build">
+		<osgi-build manifestfile="./META-INF/MANIFEST.MF" buildfile="build.xml" buildtarget="repository-deploy"
+			inheritdirty="false" verbose="true" repository="${env.OSGI_REPOSITORY}" fullrebuild="${fullrebuild}" dirtythreshold="3000">
+			<dirset dir="${basedir}/..">
+				<include name="${bundle.name.test.prefix}*"/>
+			</dirset>
+		</osgi-build>
+		<delete dir="${bundle.dist.test.dir}" />
+		<mkdir dir="${bundle.dist.test.dir}" />
+		<copy todir="${bundle.dist.test.dir}" flatten="true">
+			<fileset dir="${basedir}/..">
+				<include name="${bundle.name.test.prefix}*/dist/*"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="build-fullrebuild">
+		<property name="fullrebuild" value="true" />
+		<antcall target="bundle-build" />
+		<antcall target="test-bundle-build" />
+	</target>
+	
+	<target name="build">
+		<property name="fullrebuild" value="false" />
+		<antcall target="bundle-build" />
+		<antcall target="test-bundle-build" />
+	</target>
+	
+	<target name="junit-report">
+		<delete dir="${reports.junit.dir}" />
+		<mkdir dir="${reports.junit.dir}" />
+		
+		<junitreport todir="${reports.junit.dir}">
+			<fileset dir="${basedir}/..">
+				<include name="${bundle.name.prefix}*/junit/TEST-*.xml" />
+			</fileset>
+			<report format="frames" todir="${reports.junit.dir}" />
+		</junitreport>
+	</target>	
+
+	<target name="coverage-report">
+		<delete dir="${reports.coverage.dir}" />
+		<mkdir dir="${reports.coverage.dir}" />
+
+		<path id="emma.classpath">
+			<pathelement location="${basedir}/emma.jar" />
+			<pathelement location="${basedir}/emma_ant.jar" />
+		</path>
+		<taskdef resource="emma_ant.properties" classpathref="emma.classpath" />
+
+		<path id="all.source">
+			<dirset dir="${basedir}/..">
+				<include name="${bundle.name.prefix}*/src"/>
+				<exclude name="${bundle.name.test.prefix}*/src" />
+			</dirset>
+		</path>
+
+		<emma>
+			<merge outfile="${reports.coverage.dir}/allcoverage.emma">
+				<fileset dir="${basedir}/.." 
+					includes="${bundle.name.prefix}*/coverage/*.emma" 
+					excludes="${bundle.name.test.prefix}*/coverage/*.emma"/>
+			</merge>
+
+		    <report sourcepathref="all.source" >
+		    	<fileset dir="${reports.coverage.dir}">
+		    		<include name="allcoverage.emma"/>
+		    	</fileset>	
+		    	<html outfile="${reports.coverage.dir}/coverage.html" />
+		    	<xml outfile="${reports.coverage.dir}/coverage.xml" />
+		    </report>	
+		</emma>
+	</target>
+	
+	<target name="build-with-reports" depends="build-fullrebuild,junit-report,coverage-report" />
+
+	<target name="build-with-bootstrap">
+		<ant antfile="${basedir}/../Bootstrap/build.xml" dir="${basedir}/../Bootstrap" inheritall="false" inheritrefs="false" />
+		<antcall target="build-with-reports" />
+	</target>
+	
+</project>
