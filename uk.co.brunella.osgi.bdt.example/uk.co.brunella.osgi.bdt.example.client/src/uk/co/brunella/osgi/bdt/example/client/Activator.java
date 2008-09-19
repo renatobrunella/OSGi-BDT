@@ -22,7 +22,7 @@ public class Activator implements BundleActivator {
       String phrase = "";
 
       while (true) {
-        System.out.print("Enter phrase: ");
+        System.out.print("Enter an english phrase (cat dog bird): ");
         phrase = in.readLine();
 
         if (phrase.length() == 0) {
@@ -31,7 +31,8 @@ public class Activator implements BundleActivator {
         TranslationService service = (TranslationService) context
             .getService(reference);
         if (service != null) {
-          System.out.println(service.translate("English", "French", phrase));
+          System.out.println("In french: " + service.translate("English", "French", phrase));
+          System.out.println("In german: " + service.translate("English", "German", phrase));
           context.ungetService(reference);
         } else {
           System.out.println("Translation service is not available");
