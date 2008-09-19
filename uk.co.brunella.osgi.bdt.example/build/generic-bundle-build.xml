@@ -5,13 +5,14 @@
 	<tstamp />
 
 	<!-- OSGi Ant taskdefs -->
-	<taskdef name="osgi-create" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiCreate" />
-	<taskdef name="osgi-deploy" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiDeploy" />
-	<taskdef name="osgi-undeploy" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiUndeploy" />
-	<taskdef name="osgi-list" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiList" />
-	<taskdef name="osgi-manifest" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiManifestReader" />
-	<taskdef name="osgi-test" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiTest" />
-	<typedef name="osgi-path" classname="uk.co.brunella.osgi.bdt.ant.types.OSGiPath" />
+	<property name="bdt.jar" value="${basedir}/../build/uk.co.brunella.osgi.bdt.support-1.5.1.jar" />
+	<taskdef name="osgi-create" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiCreate" classpath="${bdt.jar}" />
+	<taskdef name="osgi-deploy" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiDeploy" classpath="${bdt.jar}" />
+	<taskdef name="osgi-undeploy" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiUndeploy" classpath="${bdt.jar}" />
+	<taskdef name="osgi-list" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiList" classpath="${bdt.jar}" />
+	<taskdef name="osgi-manifest" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiManifestReader" classpath="${bdt.jar}" />
+	<taskdef name="osgi-test" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiTest" classpath="${bdt.jar}" />
+	<typedef name="osgi-path" classname="uk.co.brunella.osgi.bdt.ant.types.OSGiPath" classpath="${bdt.jar}" />
 
 	<property name="buildrepository.dir" value="${basedir}/../build/repository" />
 
