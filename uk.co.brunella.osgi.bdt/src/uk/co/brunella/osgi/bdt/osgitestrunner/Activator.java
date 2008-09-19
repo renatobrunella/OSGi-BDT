@@ -45,7 +45,7 @@ public class Activator implements BundleActivator, ServiceListener, OSGiTestResu
 
   private BundleContext bundleContext;
   private Set<ServiceReference> registeredServices = new HashSet<ServiceReference>();
-  private ErrorLogListener errorLogListener;
+  private Object errorLogListener;
   private List<OSGiTestResult> testResults = new ArrayList<OSGiTestResult>();
   private Map<String, String> testParameters;
 
@@ -76,17 +76,15 @@ public class Activator implements BundleActivator, ServiceListener, OSGiTestResu
   }
 
   public void stop(BundleContext context) throws Exception {
-    if (errorLogListener != null) {
-      errorLogListener.close();
-    }
+    ErrorLogListenerFactory.close(errorLogListener);
     bundleContext = null;
   }
   
-  private ErrorLogListener createErrorLogListener() throws InvalidSyntaxException {
+  private Object createErrorLogListener() throws InvalidSyntaxException {
     try {
       // is the org.osgi.service.log package resolved?
       bundleContext.getBundle().loadClass("org.osgi.service.log.LogReaderService");
-      errorLogListener = new ErrorLogListener(bundleContext);
+      errorLogListener = ErrorLogListenerFactory.create(bundleContext);
       return errorLogListener;
     } catch (ClassNotFoundException e) {
       e.printStackTrace();
