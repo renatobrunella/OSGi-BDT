@@ -120,9 +120,14 @@ public class OSGiTestCase extends Fixture {
     if (cells.size() != 3) {
       exception(cells, new RuntimeException("Invalid number of columns"));
     }
-    String name = cells.at(1).text();
-    String value = cells.at(2).text();
-
+    String name = cells.at(1).text();   
+    String value;
+    if(cells.at(2).text().indexOf("=") == 0){
+      String symbol = cells.at(2).text().substring(1, cells.at(2).text().length());	
+      value = getSymbol(symbol).toString();  
+    }else{
+      value = cells.at(2).text();
+    }
     testRunner.addTestParameter(name, value);
   }
 
