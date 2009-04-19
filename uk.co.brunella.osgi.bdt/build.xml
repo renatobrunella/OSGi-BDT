@@ -53,8 +53,8 @@
 		<filter token="bundle.version" value="${version}"/>
 		<filter token="junit.version" value="${junit.version}"/>
 		<copy file="${basedir}/manifests/unfiltered.bdt.manifest.mf" tofile="${bin.dir}/filtered.bdt.manifest.mf" filtering="true" />
-		<copy file="${basedir}/manifests/unfiltered.bdt.plugin.manifest.mf" tofile="${bin.dir}/filtered.bdt.plugin.manifest.mf" filtering="true" />
-		<copy file="${basedir}/manifests/unfiltered.bdt.runner.manifest.mf" tofile="${bin.dir}/filtered.bdt.runner.manifest.mf" filtering="true" />
+		<copy file="${basedir}/manifests/unfiltered.bdt.eclipse.manifest.mf" tofile="${bin.dir}/filtered.bdt.eclipse.manifest.mf" filtering="true" />
+		<copy file="${basedir}/manifests/unfiltered.bdt.osgitestrunner.manifest.mf" tofile="${bin.dir}/filtered.bdt.osgitestrunner.manifest.mf" filtering="true" />
 	</target>
 	
 	<target name="jar" depends="build,filtermanifests">
@@ -69,7 +69,7 @@
 		<jar destfile="${dist.dir}/uk.co.brunella.osgi.bdt-${version}.jar" 
 			manifest="${bin.dir}/filtered.bdt.manifest.mf" filesetmanifest="merge">
 			<fileset dir="${bin.dir}">
-				<include name="org/osgi/framework/*"/>
+				<!-- <include name="org/osgi/framework/*"/> -->
 				<!-- JUnit 4.5 -->
 				<include name="org/junit/**"/>
 				<include name="junit/**"/>
@@ -100,53 +100,55 @@
 				<attribute name="Implementation-Vendor" value="brunella ltd" />
 			</manifest>
 		</jar>
+		
 		<!-- uk.co.brunella.osgi.bdt.eclipse -->
 		<copy file="${dist.dir}/uk.co.brunella.osgi.bdt-${version}.jar" tofile="${lib.dir}/uk.co.brunella.osgi.bdt.jar" />
-		<jar destfile="${dist.dir}/uk.co.brunella.osgi.bdt.eclipse-${version}.jar" filesetmanifest="merge">
+		<jar destfile="${dist.dir}/uk.co.brunella.osgi.bdt.eclipse-${version}.jar"
+			manifest="${bin.dir}/filtered.bdt.eclipse.manifest.mf" filesetmanifest="merge">
 			<fileset dir="${bin.dir}">
-				<include name="uk/co/brunella/osgi/bdt/*.class"/>
-				<include name="uk/co/brunella/osgi/bdt/bundle/*"/>
-				<include name="uk/co/brunella/osgi/bdt/manifest/*"/>
+				<include name="profiles/*"/>
+				<!-- Plugin -->
 				<include name="uk/co/brunella/osgi/bdt/plugin/*"/>
 				<include name="uk/co/brunella/osgi/bdt/plugin/views/*"/>
-				<include name="uk/co/brunella/osgi/bdt/util/*"/>
+				<!-- BDT core -->
+				<include name="uk/co/brunella/osgi/bdt/bundle/**"/>
+				<include name="uk/co/brunella/osgi/bdt/framework/**"/>
+				<include name="uk/co/brunella/osgi/bdt/repository/**"/>
+				<include name="uk/co/brunella/osgi/bdt/runner/**"/>
+				<include name="uk/co/brunella/osgi/bdt/util/**"/>
 			</fileset>
 			<fileset dir="${basedir}">
 				<include name="icons/*"/>
 				<include name="lib/uk.co.brunella.osgi.bdt.jar"/>
 				<include name="plugin.xml"/>
-				<include name="profiles/*"/>
-				<include name="META-INF/MANIFEST.MF"/>
 			</fileset>
-			<manifest>
-				<attribute name="Bundle-Version" value="${version}" />
+			<manifest> 
+				<attribute name="Specification-Title" value="OSGi BDT - Build Deploy Test - Eclipse Plugin" />
+				<attribute name="Specification-Version" value="${version}" />
+				<attribute name="Specification-Vendor" value="brunella ltd" />
+				<attribute name="Implementation-Title" value="OSGi BDT - Build Deploy Test - Eclipse Plugin" />
+				<attribute name="Implementation-Version" value="${version} ${TODAY}" />
+				<attribute name="Implementation-Vendor" value="brunella ltd" />
 			</manifest>
 		</jar>
+		
 		<!-- uk.co.brunella.osgi.bdt.osgitestrunner -->
-		<jar destfile="${dist.dir}/uk.co.brunella.osgi.bdt.osgitestrunner-${version}.jar">
+		<jar destfile="${dist.dir}/uk.co.brunella.osgi.bdt.osgitestrunner-${version}.jar"
+			manifest="${bin.dir}/filtered.bdt.osgitestrunner.manifest.mf" filesetmanifest="merge">
 			<fileset dir="${bin.dir}">
+				<!-- JUnit 4.5 -->
+				<include name="org/junit/**"/>
+				<include name="junit/**"/>
+				<include name="org/hamcrest/**"/>
+				<!-- Test runner -->
 				<include name="uk/co/brunella/osgi/bdt/runner/result/*"/>
 				<include name="uk/co/brunella/osgi/bdt/osgitestrunner/*"/>
 			</fileset>
-			<fileset dir="${basedir}">
-				<include name="lib/junit-4.4.jar"/>
-			</fileset>
 			<manifest>
-				<attribute name="Bundle-ManifestVersion" value="2" />
-				<attribute name="Bundle-Name" value="OSGi BDT Test Runner Bundle" />
-				<attribute name="Bundle-SymbolicName" value="uk.co.brunella.osgi.bdt.osgitestrunner" />
-				<attribute name="Bundle-Version" value="${version}" />
-				<attribute name="Bundle-Activator" value="uk.co.brunella.osgi.bdt.osgitestrunner.Activator" />
-				<attribute name="Import-Package" value='org.osgi.framework;version="1.3.0",org.osgi.service.log;version="1.3.0";resolution:=optional,org.osgi.util.tracker;version="1.3.3"' />
-				<attribute name="Bundle-ClassPath" value=".,lib/junit-4.4.jar" />
-				<attribute name="Export-Package" value='uk.co.brunella.osgi.bdt.osgitestrunner;version="1.0.0",junit.framework;include:="Assert,AssertionFailedError,ComparisonFailure",org.junit;include:="Assert,ComparisonFailure"' />
-				<attribute name="Bundle-RequiredExecutionEnvironment" value="J2SE-1.5" />
-				<attribute name="Bundle-Vendor" value="brunella ltd" />
-
-				<attribute name="Specification-Title" value="OSGi BDT Test Runner Bundle" />
+				<attribute name="Specification-Title" value="OSGi BDT - Build Deploy Test Runner" />
 				<attribute name="Specification-Version" value="${version}" />
 				<attribute name="Specification-Vendor" value="brunella ltd" />
-				<attribute name="Implementation-Title" value="OSGi BDT Test Runner Bundle" />
+				<attribute name="Implementation-Title" value="OSGi BDT - Build Deploy Test Runner" />
 				<attribute name="Implementation-Version" value="${version} ${TODAY}" />
 				<attribute name="Implementation-Vendor" value="brunella ltd" />
 			</manifest>
