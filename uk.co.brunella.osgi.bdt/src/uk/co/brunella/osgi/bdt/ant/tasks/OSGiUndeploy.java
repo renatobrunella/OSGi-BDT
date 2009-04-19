@@ -23,9 +23,9 @@ import java.io.IOException;
 
 import org.apache.tools.ant.BuildException;
 
-import uk.co.brunella.osgi.bdt.Deployer;
 import uk.co.brunella.osgi.bdt.bundle.Version;
 import uk.co.brunella.osgi.bdt.bundle.VersionRange;
+import uk.co.brunella.osgi.bdt.repository.Deployer;
 
 public class OSGiUndeploy extends AbstractOSGiTask {
 

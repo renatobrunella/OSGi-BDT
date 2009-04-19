@@ -16,11 +16,13 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-package uk.co.brunella.osgi.bdt.manifest;
+package uk.co.brunella.osgi.bdt.util;
 
 import java.util.*;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
+
+import uk.co.brunella.osgi.bdt.repository.model.AttributeElement;
 
 public class ManifestAttributeParser {
 

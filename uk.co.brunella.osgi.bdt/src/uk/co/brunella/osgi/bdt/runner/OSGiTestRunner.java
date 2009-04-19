@@ -42,10 +42,10 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor;
 import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
-import uk.co.brunella.osgi.bdt.bundle.BundleRepositoryPersister;
 import uk.co.brunella.osgi.bdt.bundle.VersionRange;
-import uk.co.brunella.osgi.bdt.runner.framework.OSGiFrameworkStarter;
-import uk.co.brunella.osgi.bdt.runner.framework.OSGiFrameworkStarterFactory;
+import uk.co.brunella.osgi.bdt.framework.OSGiFrameworkStarter;
+import uk.co.brunella.osgi.bdt.framework.OSGiFrameworkStarterFactory;
+import uk.co.brunella.osgi.bdt.repository.BundleRepositoryPersister;
 import uk.co.brunella.osgi.bdt.runner.result.OSGiTestResult;
 import uk.co.brunella.osgi.bdt.runner.result.OSGiTestResultService;
 

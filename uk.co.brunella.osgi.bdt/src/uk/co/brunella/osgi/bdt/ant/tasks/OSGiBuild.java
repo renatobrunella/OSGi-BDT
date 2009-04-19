@@ -34,7 +34,7 @@ import org.apache.tools.ant.types.DirSet;
 
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor;
 import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
-import uk.co.brunella.osgi.bdt.bundle.BundleRepositoryPersister;
+import uk.co.brunella.osgi.bdt.repository.BundleRepositoryPersister;
 
 public class OSGiBuild extends AbstractOSGiTask {
 

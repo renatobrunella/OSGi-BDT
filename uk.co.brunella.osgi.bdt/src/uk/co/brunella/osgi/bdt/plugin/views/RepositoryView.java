@@ -66,16 +66,16 @@ import org.eclipse.ui.part.DrillDownAdapter;
 import org.eclipse.ui.part.ViewPart;
 import org.osgi.service.prefs.BackingStoreException;
 
-import uk.co.brunella.osgi.bdt.Deployer;
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor;
 import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
-import uk.co.brunella.osgi.bdt.bundle.BundleRepositoryPersister;
 import uk.co.brunella.osgi.bdt.bundle.Version;
 import uk.co.brunella.osgi.bdt.bundle.VersionRange;
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor.ExportPackage;
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor.ImportPackage;
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor.RequireBundle;
 import uk.co.brunella.osgi.bdt.plugin.Activator;
+import uk.co.brunella.osgi.bdt.repository.BundleRepositoryPersister;
+import uk.co.brunella.osgi.bdt.repository.Deployer;
 
 public class RepositoryView extends ViewPart {
 

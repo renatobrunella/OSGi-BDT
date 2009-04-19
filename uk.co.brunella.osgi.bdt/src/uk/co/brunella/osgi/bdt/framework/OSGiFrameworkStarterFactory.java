@@ -16,26 +16,22 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-package uk.co.brunella.osgi.bdt.runner.framework;
+package uk.co.brunella.osgi.bdt.framework;
 
-import java.net.URL;
+public class OSGiFrameworkStarterFactory {
 
-public class KnopflerfishFrameworkStarter implements OSGiFrameworkStarter {
-
-  public String systemBundleName() {
-    throw new RuntimeException("not supported yet");
+  public static OSGiFrameworkStarter create(String frameworkName) {
+    if (frameworkName == null) {
+      throw new RuntimeException("Framework name cannot be null");
+    }
+    String frameworkStarterName = frameworkName.toLowerCase();
+    if ("equinox".equals(frameworkStarterName)) {
+      return new EquinoxFrameworkStarter();
+    } else if ("felix".equals(frameworkStarterName)) {
+      return new FelixFrameworkStarter();
+    } else if ("knopflerfish".equals(frameworkStarterName)) {
+      return new KnopflerfishFrameworkStarter();
+    }
+    throw new RuntimeException("No support for framework " + frameworkName);
   }
-
-  public String[] defaultArguments() {
-    throw new RuntimeException("not supported yet");
-  }
-  
-  public Object startFramework(URL systemBundleLocation, String[] arguments) throws Exception {
-    throw new RuntimeException("not supported yet");
-  }
-
-  public void stopFramework() throws Exception {
-    throw new RuntimeException("not supported yet");
-  }
-
 }

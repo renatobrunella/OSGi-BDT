@@ -29,7 +29,8 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.types.FileSet;
 
-import uk.co.brunella.osgi.bdt.Deployer;
+import uk.co.brunella.osgi.bdt.repository.Deployer;
+
 
 public class OSGiDeploy extends AbstractOSGiTask {
 

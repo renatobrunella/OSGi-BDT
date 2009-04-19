@@ -23,8 +23,8 @@ import java.io.IOException;
 
 import org.apache.tools.ant.BuildException;
 
-import uk.co.brunella.osgi.bdt.Deployer;
 import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
+import uk.co.brunella.osgi.bdt.repository.Deployer;
 
 public class OSGiCreate extends AbstractOSGiTask {
 

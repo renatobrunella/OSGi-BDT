@@ -16,7 +16,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-package uk.co.brunella.osgi.bdt.manifest;
+package uk.co.brunella.osgi.bdt.repository.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;

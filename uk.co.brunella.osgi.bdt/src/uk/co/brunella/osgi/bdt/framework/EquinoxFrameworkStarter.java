@@ -16,7 +16,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-package uk.co.brunella.osgi.bdt.runner.framework;
+package uk.co.brunella.osgi.bdt.framework;
 
 import java.lang.reflect.Method;
 import java.net.URL;
