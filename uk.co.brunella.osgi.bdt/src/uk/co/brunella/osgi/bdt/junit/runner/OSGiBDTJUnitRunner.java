@@ -57,7 +57,7 @@ import uk.co.brunella.osgi.bdt.framework.OSGiFrameworkStarter;
 import uk.co.brunella.osgi.bdt.junit.annotation.Include;
 import uk.co.brunella.osgi.bdt.junit.annotation.OSGiBundleContext;
 import uk.co.brunella.osgi.bdt.junit.annotation.OSGiService;
-import uk.co.brunella.osgi.bdt.junit.annotation.OSGiTest;
+import uk.co.brunella.osgi.bdt.junit.annotation.OSGiBDTTest;
 import uk.co.brunella.osgi.bdt.junit.annotation.StartPolicy;
 import uk.co.brunella.osgi.bdt.junit.runner.model.FrameworkField;
 import uk.co.brunella.osgi.bdt.junit.runner.model.FrameworkMethod;
@@ -78,14 +78,14 @@ import uk.co.brunella.osgi.bdt.repository.Deployer;
 
 public class OSGiBDTJUnitRunner extends Runner {
 
-  public static final String OSGI_BDT_RUNNER_BUNDLE_NAME = "uk.co.brunella.osgi.bdt.junit.runner";
+  public static final String OSGI_BDT_RUNNER_BUNDLE_NAME = "uk.co.brunella.osgi.bdt";
   
   private String testClassName;
   private TestClass testClass;
   private TestClass osgiTestClass;
   private Bundle osgiTestBundle;
   private Description testClassDescription;
-  private OSGiTest testClassAnnotation;
+  private OSGiBDTTest testClassAnnotation;
   private OSGiFrameworkStarter frameworkStarter;
   private BundleRepository repository;
   private File testBundleFile;
@@ -93,7 +93,7 @@ public class OSGiBDTJUnitRunner extends Runner {
   public OSGiBDTJUnitRunner(Class<?> testClass) throws InitializationError {
     validate(testClass);
     testClassName = testClass.getName();
-    testClassAnnotation = testClass.getAnnotation(OSGiTest.class);
+    testClassAnnotation = testClass.getAnnotation(OSGiBDTTest.class);
     this.testClass = new TestClass(testClass);
     repository = loadRepository(testClassAnnotation.repository());
     createDescription(this.testClass);
@@ -101,7 +101,7 @@ public class OSGiBDTJUnitRunner extends Runner {
   }
 
   private void validate(Class<?> testClass) throws InitializationError {
-    if (!testClass.isAnnotationPresent(OSGiTest.class)) {
+    if (!testClass.isAnnotationPresent(OSGiBDTTest.class)) {
       throw new InitializationError("OSGiTest annotation is missing");
     }
   }
@@ -370,7 +370,7 @@ public class OSGiBDTJUnitRunner extends Runner {
   }
 
   
-  private File createJar(BundleRepository repository, OSGiTest annotation) throws InitializationError {
+  private File createJar(BundleRepository repository, OSGiBDTTest annotation) throws InitializationError {
     File tempDirectory = new File(repository.getLocation(), Deployer.TEMP_DIRECTORY);
     File testBundleFile = new File(tempDirectory, "testjar.jar");
     try {
