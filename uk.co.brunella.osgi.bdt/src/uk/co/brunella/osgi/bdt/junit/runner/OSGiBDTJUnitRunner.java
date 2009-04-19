@@ -102,7 +102,7 @@ public class OSGiBDTJUnitRunner extends Runner {
 
   private void validate(Class<?> testClass) throws InitializationError {
     if (!testClass.isAnnotationPresent(OSGiBDTTest.class)) {
-      throw new InitializationError("OSGiTest annotation is missing");
+      throw new InitializationError("OSGiBDTTest annotation is missing");
     }
   }
   
