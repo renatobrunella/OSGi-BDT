@@ -2,7 +2,8 @@
 <project basedir="." default="dist" name="uk.co.brunella.osgi.bdt">
 	<tstamp />
 
-	<property name="version" value="1.5.1" />
+	<property name="version" value="2.0.0" />
+	<property name="junit.version" value="4.5.0" />
 
 	<property name="debuglevel" value="source,lines,vars" />
 	<property name="target" value="1.5" />
@@ -11,6 +12,7 @@
 	<property name="bin.path" value="bin" />
 	<property name="bin.dir" value="${basedir}/${bin.path}" />
 	<property name="src.dir" value="${basedir}/src" />
+	<property name="src-junit.dir" value="${basedir}/src-junit" />
 	<property name="lib.path" value="lib" />
 	<property name="lib.dir" value="${basedir}/${lib.path}" />
 	<property name="build.lib.dir" value="${basedir}/build-lib" />
@@ -38,41 +40,69 @@
 
 	<target name="build" depends="init">
 		<javac debug="true" debuglevel="${debuglevel}" destdir="${bin.dir}" source="${source}" target="${target}"
+			srcdir="${src-junit.dir}">
+			<classpath refid="classpath" />
+		</javac>
+		<javac debug="true" debuglevel="${debuglevel}" destdir="${bin.dir}" source="${source}" target="${target}"
 			srcdir="${src.dir}">
 			<classpath refid="classpath" />
 		</javac>
 	</target>
 
-	<target name="jar" depends="build">
-		<copy file="${src.dir}/uk/co/brunella/osgi/bdt/antlib.xml" tofile="${bin.dir}/uk/co/brunella/osgi/bdt/antlib.xml"/>
-		<jar destfile="${dist.dir}/uk.co.brunella.osgi.bdt.support-${version}.jar">
-			<fileset dir="${bin.dir}">
-				<include name="org/osgi/framework/*"/>
-				<include name="org/junit/**"/>
-				<include name="junit/**"/>
-				<include name="uk/co/brunella/osgi/bdt/*.class"/>
-				<include name="uk/co/brunella/osgi/bdt/*.xml"/>
-				<include name="uk/co/brunella/osgi/bdt/bundle/*"/>
-				<include name="uk/co/brunella/osgi/bdt/fit/*"/>
-				<include name="uk/co/brunella/osgi/bdt/manifest/*"/>
-				<include name="uk/co/brunella/osgi/bdt/runner/**"/>
-				<include name="uk/co/brunella/osgi/bdt/ant/**"/>
-				<include name="uk/co/brunella/osgi/bdt/util/*"/>
-			</fileset>
-			<fileset dir="${basedir}">
+	<target name="filtermanifests" depends="init">
+		<filter token="bundle.version" value="${version}"/>
+		<filter token="junit.version" value="${junit.version}"/>
+		<copy file="${basedir}/manifests/unfiltered.bdt.manifest.mf" tofile="${bin.dir}/filtered.bdt.manifest.mf" filtering="true" />
+		<copy file="${basedir}/manifests/unfiltered.bdt.plugin.manifest.mf" tofile="${bin.dir}/filtered.bdt.plugin.manifest.mf" filtering="true" />
+		<copy file="${basedir}/manifests/unfiltered.bdt.runner.manifest.mf" tofile="${bin.dir}/filtered.bdt.runner.manifest.mf" filtering="true" />
+	</target>
+	
+	<target name="jar" depends="build,filtermanifests">
+		<!-- uk.co.brunella.osgi.bdt -->
+		<copy file="${src.dir}/uk/co/brunella/osgi/bdt/ant/antlib.xml" 
+			tofile="${bin.dir}/uk/co/brunella/osgi/bdt/ant/antlib.xml"/>
+		<copy todir="${bin.dir}">
+			<fileset dir="${src.dir}">
 				<include name="profiles/*"/>
 			</fileset>
-			<manifest>
-				<attribute name="Specification-Title" value="OSGi BDT Ant Library" />
+		</copy>
+		<jar destfile="${dist.dir}/uk.co.brunella.osgi.bdt-${version}.jar" 
+			manifest="${bin.dir}/filtered.bdt.manifest.mf" filesetmanifest="merge">
+			<fileset dir="${bin.dir}">
+				<include name="org/osgi/framework/*"/>
+				<!-- JUnit 4.5 -->
+				<include name="org/junit/**"/>
+				<include name="junit/**"/>
+				<include name="org/hamcrest/**"/>
+				<!-- Environment profiles -->
+				<include name="profiles/*"/>
+				<!-- Command line support -->
+				<include name="uk/co/brunella/osgi/bdt/Main.class"/>
+				<!-- Ant support -->
+				<include name="uk/co/brunella/osgi/bdt/ant/**"/>
+				<!-- Fitnesse support -->
+				<include name="uk/co/brunella/osgi/bdt/fit/**"/>
+				<!-- Junit support -->
+				<include name="uk/co/brunella/osgi/bdt/junit/**"/>
+				<!-- BDT core -->
+				<include name="uk/co/brunella/osgi/bdt/bundle/**"/>
+				<include name="uk/co/brunella/osgi/bdt/framework/**"/>
+				<include name="uk/co/brunella/osgi/bdt/repository/**"/>
+				<include name="uk/co/brunella/osgi/bdt/runner/**"/>
+				<include name="uk/co/brunella/osgi/bdt/util/**"/>
+			</fileset>
+			<manifest> 
+				<attribute name="Specification-Title" value="OSGi BDT - Build Deploy Test" />
 				<attribute name="Specification-Version" value="${version}" />
 				<attribute name="Specification-Vendor" value="brunella ltd" />
-				<attribute name="Implementation-Title" value="OSGi BDT Ant Library" />
+				<attribute name="Implementation-Title" value="OSGi BDT - Build Deploy Test" />
 				<attribute name="Implementation-Version" value="${version} ${TODAY}" />
 				<attribute name="Implementation-Vendor" value="brunella ltd" />
 			</manifest>
 		</jar>
-		<copy file="${dist.dir}/uk.co.brunella.osgi.bdt.support-${version}.jar" tofile="${lib.dir}/uk.co.brunella.osgi.bdt.support.jar" />
-		<jar destfile="${dist.dir}/uk.co.brunella.osgi.bdt-${version}.jar" filesetmanifest="merge">
+		<!-- uk.co.brunella.osgi.bdt.eclipse -->
+		<copy file="${dist.dir}/uk.co.brunella.osgi.bdt-${version}.jar" tofile="${lib.dir}/uk.co.brunella.osgi.bdt.jar" />
+		<jar destfile="${dist.dir}/uk.co.brunella.osgi.bdt.eclipse-${version}.jar" filesetmanifest="merge">
 			<fileset dir="${bin.dir}">
 				<include name="uk/co/brunella/osgi/bdt/*.class"/>
 				<include name="uk/co/brunella/osgi/bdt/bundle/*"/>
@@ -83,7 +113,7 @@
 			</fileset>
 			<fileset dir="${basedir}">
 				<include name="icons/*"/>
-				<include name="lib/uk.co.brunella.osgi.bdt.support.jar"/>
+				<include name="lib/uk.co.brunella.osgi.bdt.jar"/>
 				<include name="plugin.xml"/>
 				<include name="profiles/*"/>
 				<include name="META-INF/MANIFEST.MF"/>
@@ -92,6 +122,7 @@
 				<attribute name="Bundle-Version" value="${version}" />
 			</manifest>
 		</jar>
+		<!-- uk.co.brunella.osgi.bdt.osgitestrunner -->
 		<jar destfile="${dist.dir}/uk.co.brunella.osgi.bdt.osgitestrunner-${version}.jar">
 			<fileset dir="${bin.dir}">
 				<include name="uk/co/brunella/osgi/bdt/runner/result/*"/>
