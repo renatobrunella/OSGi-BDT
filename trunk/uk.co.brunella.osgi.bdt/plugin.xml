@@ -19,8 +19,8 @@
    <extension
          point="org.eclipse.ant.core.antTasks">
       <antTask
-            class="uk.co.brunella.osgi.bdt.tasks.OSGiCreate"
-            library="lib/uk.co.brunella.osgi.bdt.support.jar"
+            class="uk.co.brunella.osgi.bdt.ant.tasks.OSGiCreate"
+            library="lib/uk.co.brunella.osgi.bdt.jar"
             eclipseRuntime="false"
             name="osgi-create">
       </antTask>
@@ -28,8 +28,8 @@
    <extension
          point="org.eclipse.ant.core.antTasks">
       <antTask
-            class="uk.co.brunella.osgi.bdt.tasks.OSGiDeploy"
-            library="lib/uk.co.brunella.osgi.bdt.support.jar"
+            class="uk.co.brunella.osgi.bdt.ant.tasks.OSGiDeploy"
+            library="lib/uk.co.brunella.osgi.bdt.jar"
             eclipseRuntime="false"
             name="osgi-deploy">
       </antTask>
@@ -37,8 +37,8 @@
    <extension
          point="org.eclipse.ant.core.antTasks">
       <antTask
-            class="uk.co.brunella.osgi.bdt.tasks.OSGiUndeploy"
-            library="lib/uk.co.brunella.osgi.bdt.support.jar"
+            class="uk.co.brunella.osgi.bdt.ant.tasks.OSGiUndeploy"
+            library="lib/uk.co.brunella.osgi.bdt.jar"
             eclipseRuntime="false"
             name="osgi-undeploy">
       </antTask>
@@ -46,8 +46,8 @@
    <extension
          point="org.eclipse.ant.core.antTasks">
       <antTask
-            class="uk.co.brunella.osgi.bdt.tasks.OSGiList"
-            library="lib/uk.co.brunella.osgi.bdt.support.jar"
+            class="uk.co.brunella.osgi.bdt.ant.tasks.OSGiList"
+            library="lib/uk.co.brunella.osgi.bdt.jar"
             eclipseRuntime="false"
             name="osgi-list">
       </antTask>
@@ -55,8 +55,8 @@
    <extension
          point="org.eclipse.ant.core.antTasks">
       <antTask
-            class="uk.co.brunella.osgi.bdt.tasks.OSGiManifestReader"
-            library="lib/uk.co.brunella.osgi.bdt.support.jar"
+            class="uk.co.brunella.osgi.bdt.ant.tasks.OSGiManifestReader"
+            library="lib/uk.co.brunella.osgi.bdt.jar"
             eclipseRuntime="false"
             name="osgi-manifest">
       </antTask>
@@ -64,8 +64,8 @@
    <extension
          point="org.eclipse.ant.core.antTasks">
       <antTask
-            class="uk.co.brunella.osgi.bdt.tasks.OSGiTest"
-            library="lib/uk.co.brunella.osgi.bdt.support.jar"
+            class="uk.co.brunella.osgi.bdt.ant.tasks.OSGiTest"
+            library="lib/uk.co.brunella.osgi.bdt.jar"
             eclipseRuntime="false"
             name="osgi-test">
       </antTask>
@@ -73,8 +73,8 @@
    <extension
          point="org.eclipse.ant.core.antTasks">
       <antTask
-            class="uk.co.brunella.osgi.bdt.tasks.OSGiBuild"
-            library="lib/uk.co.brunella.osgi.bdt.support.jar"
+            class="uk.co.brunella.osgi.bdt.ant.tasks.OSGiBuild"
+            library="lib/uk.co.brunella.osgi.bdt.jar"
             eclipseRuntime="false"
             name="osgi-build">
       </antTask>
@@ -82,8 +82,8 @@
    <extension
          point="org.eclipse.ant.core.antTypes">
       <antType
-            class="uk.co.brunella.osgi.bdt.types.OSGiPath"
-            library="lib/uk.co.brunella.osgi.bdt.support.jar"
+            class="uk.co.brunella.osgi.bdt.ant.types.OSGiPath"
+            library="lib/uk.co.brunella.osgi.bdt.jar"
             eclipseRuntime="false"
             name="osgi-path">
       </antType>
@@ -91,7 +91,7 @@
    <extension
          point="org.eclipse.ant.core.extraClasspathEntries">
       <extraClasspathEntry
-            library="lib/uk.co.brunella.osgi.bdt.support.jar" eclipseRuntime="false">
+            library="lib/uk.co.brunella.osgi.bdt.jar" eclipseRuntime="false">
       </extraClasspathEntry>
    </extension>
 </plugin>
