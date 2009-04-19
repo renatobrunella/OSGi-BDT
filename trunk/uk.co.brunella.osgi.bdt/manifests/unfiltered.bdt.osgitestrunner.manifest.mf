@@ -1,13 +1,15 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: OSGi BDT - Build Deploy Test
-Bundle-SymbolicName: uk.co.brunella.osgi.bdt; singleton:=true
+Bundle-Name: OSGi BDT Test Runner Bundle
+Bundle-SymbolicName: uk.co.brunella.osgi.bdt.osgitestrunner; singleton:=true
 Bundle-Version: @bundle.version@
+Bundle-Activator: uk.co.brunella.osgi.bdt.osgitestrunner.Activator
 Bundle-Vendor: brunella ltd
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .
-Import-Package: org.osgi.framework;version="1.4.0"
+Import-Package: org.osgi.framework;version="1.3.0",org.osgi.service.log;version="1.3.0";resolution:=optional,
+ org.osgi.util.tracker;version="1.3.3"
 Export-Package: junit.extensions;version="@junit.version@";uses:="junit.framework",
  junit.framework;version="@junit.version@";uses:="org.junit.runner.manipulation,org.junit.runner,org.junit.runner.notification",
  junit.runner;version="@junit.version@";uses:="junit.framework",
@@ -34,7 +36,5 @@ Export-Package: junit.extensions;version="@junit.version@";uses:="junit.framewor
  org.junit.runner.notification;version="@junit.version@";uses:="org.junit.runner",
  org.junit.runners;version="@junit.version@";uses:="org.junit.runner.manipulation,org.junit.runner,org.junit.internal.runners,org.junit.runners.model,org.junit.runner.notification",
  org.junit.runners.model;version="@junit.version@";uses:="org.junit.runner",
- uk.co.brunella.osgi.bdt.junit.annotation;version="@bundle.version@",
- uk.co.brunella.osgi.bdt.junit.runner;version="@bundle.version@";uses:="org.junit.runner,org.junit.runner.notification,uk.co.brunella.osgi.bdt.junit.runner.model"
-Main-Class: uk.co.brunella.osgi.bdt.Main
+ uk.co.brunella.osgi.bdt.osgitestrunner;version="@bundle.version@"
 
