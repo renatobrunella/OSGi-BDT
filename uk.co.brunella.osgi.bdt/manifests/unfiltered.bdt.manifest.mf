@@ -1,0 +1,39 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: OSGi BDT - Build Deploy Test
+Bundle-SymbolicName: uk.co.brunella.osgi.bdt; singleton:=true
+Bundle-Version: @bundle.version@
+Bundle-Vendor: brunella ltd
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: .
+Import-Package: org.osgi.framework;version="1.4.0"
+Export-Package: junit.extensions;version="@junit.version@";uses:="junit.framework",
+ junit.framework;version="@junit.version@";uses:="org.junit.runner.manipulation,org.junit.runner,org.junit.runner.notification",
+ junit.runner;version="@junit.version@";uses:="junit.framework",
+ junit.textui;version="@junit.version@";uses:="junit.framework,junit.runner",
+ org.hamcrest;version="@junit.version@",
+ org.hamcrest.core;version="@junit.version@";uses:="org.hamcrest",
+ org.hamcrest.internal;version="@junit.version@";uses:="org.hamcrest",
+ org.junit;version="@junit.version@";uses:="org.hamcrest",
+ org.junit.experimental.results;version="@junit.version@";uses:="org.junit.runner,org.hamcrest",
+ org.junit.experimental.runners;version="@junit.version@";uses:="org.junit.runners,org.junit.runners.model",
+ org.junit.experimental.theories;version="@junit.version@";uses:="org.junit.experimental.theories.internal,org.junit.internal,org.junit.runners,org.junit.runners.model",
+ org.junit.experimental.theories.internal;version="@junit.version@";uses:="org.junit.experimental.theories,org.junit.runners.model",
+ org.junit.experimental.theories.suppliers;version="@junit.version@";uses:="org.junit.experimental.theories",
+ org.junit.internal;version="@junit.version@";uses:="org.junit.runner,org.junit.runner.notification,org.hamcrest",
+ org.junit.internal.builders;version="@junit.version@";uses:="org.junit.runner,org.junit.runners.model,org.junit.runner.notification",
+ org.junit.internal.matchers;version="@junit.version@";uses:="org.hamcrest",
+ org.junit.internal.requests;version="@junit.version@";uses:="org.junit.runner.manipulation,org.junit.runner",
+ org.junit.internal.runners;version="@junit.version@";uses:="org.junit.runner.manipulation,junit.framework,org.junit.runner,org.junit.runner.notification",
+ org.junit.internal.runners.model;version="@junit.version@";uses:="org.junit.internal,org.junit.runner,org.junit.runner.notification",
+ org.junit.internal.runners.statements;version="@junit.version@";uses:="org.junit.runners.model",
+ org.junit.matchers;version="@junit.version@";uses:="org.junit.internal.matchers,org.hamcrest",
+ org.junit.runner;version="@junit.version@";uses:="org.junit.runner.manipulation,junit.framework,org.junit.internal,org.junit.runner.notification",
+ org.junit.runner.manipulation;version="@junit.version@";uses:="org.junit.runner",
+ org.junit.runner.notification;version="@junit.version@";uses:="org.junit.runner",
+ org.junit.runners;version="@junit.version@";uses:="org.junit.runner.manipulation,org.junit.runner,org.junit.internal.runners,org.junit.runners.model,org.junit.runner.notification",
+ org.junit.runners.model;version="@junit.version@";uses:="org.junit.runner",
+ uk.co.brunella.osgi.bdt.junit.annotation;version="@bundle.version@",
+ uk.co.brunella.osgi.bdt.junit.runner;version="@bundle.version@";uses:="org.junit.runner,org.junit.runner.notification,uk.co.brunella.osgi.bdt.junit.runner.model"
+Main-Class: uk.co.brunella.osgi.bdt.Main
