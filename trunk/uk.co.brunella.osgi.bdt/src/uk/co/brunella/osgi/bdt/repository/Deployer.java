@@ -16,7 +16,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-package uk.co.brunella.osgi.bdt;
+package uk.co.brunella.osgi.bdt.repository;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,7 +31,6 @@ import org.osgi.framework.Constants;
 
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor;
 import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
-import uk.co.brunella.osgi.bdt.bundle.BundleRepositoryPersister;
 import uk.co.brunella.osgi.bdt.bundle.Version;
 import uk.co.brunella.osgi.bdt.bundle.VersionRange;
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor.ExportPackage;
@@ -39,6 +38,11 @@ import uk.co.brunella.osgi.bdt.util.FileUtils;
 
 public class Deployer {
 
+  public static final String BUNDLES_DIRECTORY = "bundles";
+  public static final String EXTRACTED_DIRECTORY = "extracted";
+  public static final String PACKAGES_DIRECTORY = "packages";
+  public static final String TEMP_DIRECTORY = "temp";
+  
   private static final int MAX_WAIT_TIME_IN_MILLIS = 10000;
   private static final String CLASS_FILE_EXTENSION = ".class";
   private static final String JAR_FILE_EXTENSION = ".jar";
@@ -54,10 +58,10 @@ public class Deployer {
 
   public Deployer(File repositoryDirectory) {
     this.repositoryDirectory = repositoryDirectory;
-    bundleDirectory = new File(repositoryDirectory, "bundles");
-    bundleExtractedDirectory = new File(repositoryDirectory, "extracted");
-    packageDirectory = new File(repositoryDirectory, "packages");
-    tempDirectory = new File(repositoryDirectory, "temp");
+    bundleDirectory = new File(repositoryDirectory, BUNDLES_DIRECTORY);
+    bundleExtractedDirectory = new File(repositoryDirectory, EXTRACTED_DIRECTORY);
+    packageDirectory = new File(repositoryDirectory, PACKAGES_DIRECTORY);
+    tempDirectory = new File(repositoryDirectory, TEMP_DIRECTORY);
     persister = new BundleRepositoryPersister(repositoryDirectory);
     messages = new ArrayList<String>();
     verbose = false;

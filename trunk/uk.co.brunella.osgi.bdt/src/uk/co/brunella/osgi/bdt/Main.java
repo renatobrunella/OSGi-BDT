@@ -24,10 +24,11 @@ import java.util.List;
 
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor;
 import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
-import uk.co.brunella.osgi.bdt.bundle.BundleRepositoryPersister;
 import uk.co.brunella.osgi.bdt.bundle.Version;
 import uk.co.brunella.osgi.bdt.bundle.VersionRange;
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor.ExportPackage;
+import uk.co.brunella.osgi.bdt.repository.BundleRepositoryPersister;
+import uk.co.brunella.osgi.bdt.repository.Deployer;
 
 public class Main {
 

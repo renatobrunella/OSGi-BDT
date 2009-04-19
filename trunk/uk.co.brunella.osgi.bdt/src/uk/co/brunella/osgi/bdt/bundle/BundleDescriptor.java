@@ -44,8 +44,8 @@ import java.util.jar.Manifest;
 
 import org.osgi.framework.Constants;
 
-import uk.co.brunella.osgi.bdt.manifest.AttributeElement;
-import uk.co.brunella.osgi.bdt.manifest.ManifestAttributeParser;
+import uk.co.brunella.osgi.bdt.repository.model.AttributeElement;
+import uk.co.brunella.osgi.bdt.util.ManifestAttributeParser;
 
 public class BundleDescriptor implements Serializable {
 

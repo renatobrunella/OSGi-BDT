@@ -31,9 +31,9 @@ import org.apache.tools.ant.types.Path;
 
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor;
 import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
-import uk.co.brunella.osgi.bdt.bundle.BundleRepositoryPersister;
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor.ExportPackage;
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor.ImportPackage;
+import uk.co.brunella.osgi.bdt.repository.BundleRepositoryPersister;
 
 public class OSGiPath extends Path {
 

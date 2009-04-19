@@ -16,7 +16,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-package uk.co.brunella.osgi.bdt.bundle;
+package uk.co.brunella.osgi.bdt.repository;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,6 +24,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+
+import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
 
 public class BundleRepositoryPersister {
 

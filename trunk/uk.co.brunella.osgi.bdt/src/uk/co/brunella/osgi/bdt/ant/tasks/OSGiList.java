@@ -25,10 +25,10 @@ import java.util.List;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 
-import uk.co.brunella.osgi.bdt.Deployer;
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor;
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor.ExportPackage;
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor.ImportPackage;
+import uk.co.brunella.osgi.bdt.repository.Deployer;
 
 public class OSGiList extends Task {
 

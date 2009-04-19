@@ -16,26 +16,18 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-package uk.co.brunella.osgi.bdt.runner.framework;
+package uk.co.brunella.osgi.bdt.framework;
 
 import java.net.URL;
 
-public class FelixFrameworkStarter implements OSGiFrameworkStarter {
+public interface OSGiFrameworkStarter {
 
-  public String systemBundleName() {
-    throw new RuntimeException("not supported yet");
-  }
-
-  public String[] defaultArguments() {
-    throw new RuntimeException("not supported yet");
-  }
-
-  public Object startFramework(URL systemBundleLocation, String[] arguments) throws Exception {
-    throw new RuntimeException("not supported yet");
-  }
-
-  public void stopFramework() throws Exception {
-    throw new RuntimeException("not supported yet");
-  }
-
+  String systemBundleName();
+  
+  String[] defaultArguments();
+  
+  // returns BundleContext of system bundle
+  Object startFramework(URL systemBundleLocation, String[] arguments) throws Exception;
+  
+  void stopFramework() throws Exception; 
 }
