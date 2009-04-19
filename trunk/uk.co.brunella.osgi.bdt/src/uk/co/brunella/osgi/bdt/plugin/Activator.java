@@ -24,7 +24,7 @@ import org.osgi.framework.BundleContext;
 
 public class Activator extends AbstractUIPlugin {
 
-	public static final String PLUGIN_ID = "uk.co.brunella.osgi.bdt";
+	public static final String PLUGIN_ID = "uk.co.brunella.osgi.bdt.eclipse";
 
 	private static Activator plugin;
 	
