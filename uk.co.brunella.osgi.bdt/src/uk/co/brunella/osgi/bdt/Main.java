@@ -33,6 +33,7 @@ import uk.co.brunella.osgi.bdt.repository.Deployer;
 public class Main {
 
   public static void main(String[] args) throws IOException {
+    
     if (args.length < 1) {
       printHelp();
       System.exit(-1);
@@ -67,6 +68,14 @@ public class Main {
     } else if ("-list".equals(command)) {
       if (args.length == 2) {
         if (!list(args[1])) {
+          System.exit(-1);
+        }
+      } else {
+        printHelp();
+      }
+    } else if ("-listprofiles".equals(command)) {
+      if (args.length == 1) {
+        if (!listProfiles()) {
           System.exit(-1);
         }
       } else {
@@ -141,6 +150,13 @@ public class Main {
     return true;
   }
 
+  private static boolean listProfiles() throws IOException {
+    for (String profileName : BundleRepository.getProfileNameList()) {
+      System.out.println(profileName);
+    }
+    return true;
+  }
+
   private static boolean resolve(String packageName, String range, String repositoryDir) throws IOException {
     File repositoryDirectory = new File(repositoryDir);
     if (!checkRepository(repositoryDirectory)) {
@@ -165,12 +181,13 @@ public class Main {
   }
 
   private static void printHelp() {
-    System.out.println("OSGi Ant Bundle Repository:");
+    System.out.println("OSGiBDT:");
     System.out.println("\t-help");
-    System.out.println("\t-create repository");
+    System.out.println("\t-create repository profilename");
     System.out.println("\t-deploy bundle repository");
     System.out.println("\t-undeploy bundlename bundleversion repository");
     System.out.println("\t-list repository");
+    System.out.println("\t-listprofiles");
     System.out.println("\t-resolve packagename versionrange repository");
   }
 
