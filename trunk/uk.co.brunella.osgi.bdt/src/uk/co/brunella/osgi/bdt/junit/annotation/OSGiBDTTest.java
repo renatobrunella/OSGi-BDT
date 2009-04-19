@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Inherited
-public @interface OSGiTest {
+public @interface OSGiBDTTest {
   String baseDir() default ".";
   String manifest() default "META-INF/MANIFEST.MF";
   Framework framework() default Framework.EQUINOX;
