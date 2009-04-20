@@ -76,6 +76,38 @@ import uk.co.brunella.osgi.bdt.junit.runner.statement.Statement;
 import uk.co.brunella.osgi.bdt.repository.BundleRepositoryPersister;
 import uk.co.brunella.osgi.bdt.repository.Deployer;
 
+/**
+ * The OSGi BDT JUnit runner. Allows to run an OSGiBDTTest under JUnit 4.
+ * Is used with the <code>RunWith</code> JUnit annotation.
+ * 
+ * <p>Example:</p>
+ * <p><blockquote><pre>
+ * <b>&#64;RunWith(OSGiBDTJUnitRunner.class)</b>
+ * <b>&#64;OSGiBDTTest</b>(
+ *   baseDir = ".",
+ *   manifest = "META-INF/MANIFEST.MF",
+ *   buildIncludes = { &#64;Include(source = "bin", dest = "") },
+ *   requiredBundles = { "org.eclipse.osgi.services", 
+ *     "org.eclipse.equinox.log" }
+ * )
+ * public class BundleTestClass {
+ * 
+ *   &#64;OSGiBundleContext
+ *   private BundleContext bundleContext;
+ * 
+ *   &#64;OSGiService(serviceName = "com.example.MyService")
+ *   private MyService myService;
+ * 
+ *   &#64;Test
+ *   public void testService() {
+ *      ...
+ *   }
+ * }
+ * </pre></blockquote></p>
+ * 
+ * @see uk.co.brunella.osgi.bdt.junit.annotation.OSGiBDTTest
+ * @see org.junit.runner.RunWith
+ */
 public class OSGiBDTJUnitRunner extends Runner {
 
   public static final String OSGI_BDT_RUNNER_BUNDLE_NAME = "uk.co.brunella.osgi.bdt";
