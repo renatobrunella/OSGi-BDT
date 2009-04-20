@@ -163,7 +163,6 @@ public class OSGiBDTJUnitRunner extends Runner {
   }
   
   private void startFramework() {
-    System.out.println("startFramework");
     try {
       String systemBundleLocation = findBundle(testClassAnnotation.systemBundle()); 
       String[] frameworkParameters = new String[] { "-clean" };
@@ -239,7 +238,6 @@ public class OSGiBDTJUnitRunner extends Runner {
   }
 
   private void stopFramework() {
-    System.out.println("stopFramework");
     try {
       frameworkStarter.stopFramework();
     } catch (Exception e) {
