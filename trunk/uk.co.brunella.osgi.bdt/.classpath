@@ -4,6 +4,7 @@
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="src-junit"/>
+	<classpathentry kind="src" path="src-osgi"/>
 	<classpathentry kind="lib" path="build-lib/fitnesse.jar"/>
 	<classpathentry kind="lib" path="build-lib/osgi.cmpn.jar"/>
 	<classpathentry kind="lib" path="build-lib/osgi.core.jar"/>

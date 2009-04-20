@@ -13,6 +13,7 @@
 	<property name="bin.dir" value="${basedir}/${bin.path}" />
 	<property name="src.dir" value="${basedir}/src" />
 	<property name="src-junit.dir" value="${basedir}/src-junit" />
+	<property name="src-osgi.dir" value="${basedir}/src-osgi" />
 	<property name="lib.path" value="lib" />
 	<property name="lib.dir" value="${basedir}/${lib.path}" />
 	<property name="build.lib.dir" value="${basedir}/build-lib" />
@@ -39,6 +40,10 @@
 	</target>
 
 	<target name="build" depends="init">
+		<javac debug="true" debuglevel="${debuglevel}" destdir="${bin.dir}" source="1.2" target="1.2"
+			srcdir="${src-osgi.dir}">
+			<classpath refid="classpath" />
+		</javac>
 		<javac debug="true" debuglevel="${debuglevel}" destdir="${bin.dir}" source="${source}" target="${target}"
 			srcdir="${src-junit.dir}">
 			<classpath refid="classpath" />
@@ -69,7 +74,8 @@
 		<jar destfile="${dist.dir}/uk.co.brunella.osgi.bdt-${version}.jar" 
 			manifest="${bin.dir}/filtered.bdt.manifest.mf" filesetmanifest="merge">
 			<fileset dir="${bin.dir}">
-				<!-- <include name="org/osgi/framework/*"/> -->
+				<!-- OSGi framework -->
+				<include name="org/osgi/framework/*"/>
 				<!-- JUnit 4.5 -->
 				<include name="org/junit/**"/>
 				<include name="junit/**"/>
