@@ -11,4 +11,5 @@ public @interface OSGiService {
   String serviceName() default "";
   Class<?> serviceClass() default Void.class;
   String filter() default "";
+  long timeout() default 0;
 }

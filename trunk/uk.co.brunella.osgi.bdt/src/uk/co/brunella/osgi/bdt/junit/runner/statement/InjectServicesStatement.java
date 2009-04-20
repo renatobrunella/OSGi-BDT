@@ -13,6 +13,8 @@ import uk.co.brunella.osgi.bdt.junit.runner.model.FrameworkField;
 
 public class InjectServicesStatement extends Statement {
 
+  private final static long WAIT_TIME_IN_MILLIS = 100L;
+  
   private final Bundle fTestBundle;
   private final Statement fNext;
   private final Object fTarget;
@@ -32,7 +34,8 @@ public class InjectServicesStatement extends Statement {
       Annotation annotation = field.getAnnotation(OSGiService.class.getName());
       String serviceClassName = getServiceClassName(annotation);
       String filter = getServiceFilter(annotation);
-      Object service = getService(serviceClassName, filter);
+      long timeout = getServiceTimeout(annotation);
+      Object service = getService(serviceClassName, filter, timeout);
       field.set(fTarget, service);
     }
     fNext.evaluate();
@@ -46,11 +49,23 @@ public class InjectServicesStatement extends Statement {
     }
   }
 
-  private Object getService(String serviceClassName, String filter) {
+  private Object getService(String serviceClassName, String filter, long timeout) {
     BundleContext bundleContext = fTestBundle.getBundleContext();
-    ServiceReference reference = getServiceReference(bundleContext, serviceClassName, filter);
+    ServiceReference reference = null;
+    if (timeout == 0L) {
+      reference = getServiceReference(bundleContext, serviceClassName, filter);
+    } else {
+      long currentTime = System.currentTimeMillis();
+      reference = getServiceReference(bundleContext, serviceClassName, filter);
+      while (reference == null && System.currentTimeMillis() < currentTime + timeout) {
+        try {
+          Thread.sleep(WAIT_TIME_IN_MILLIS);
+        } catch (InterruptedException e) { }
+        reference = getServiceReference(bundleContext, serviceClassName, filter);
+      }
+    }
     if (reference == null) {
-      return null;
+      throw new AssertionError("Could not inject service \"" + serviceClassName + "\" " + filter);
     }
     return bundleContext.getService(reference);
   }
@@ -92,6 +107,10 @@ public class InjectServicesStatement extends Statement {
   
   private String getServiceFilter(Annotation annotation) {
     return (String) getAnnoationValue(annotation, "filter");
+  }
+  
+  private long getServiceTimeout(Annotation annotation) {
+    return (Long) getAnnoationValue(annotation, "timeout");
   }
 
   private Object getAnnoationValue(Annotation annotation, String methodName) {
