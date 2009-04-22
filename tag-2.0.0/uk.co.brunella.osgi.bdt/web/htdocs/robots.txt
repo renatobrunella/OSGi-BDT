@@ -1,0 +1,4 @@
+User-agent: *
+Sitemap: http://qof-jdbc.sourceforge.net/sitemap.xml
+Disallow: /codepress
+Disallow: /scripts
