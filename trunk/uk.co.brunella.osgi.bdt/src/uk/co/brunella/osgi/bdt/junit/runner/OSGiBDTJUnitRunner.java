@@ -18,6 +18,8 @@
  */
 package uk.co.brunella.osgi.bdt.junit.runner;
 
+import static org.osgi.framework.Constants.FRAGMENT_HOST;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,6 +31,7 @@ import java.lang.annotation.Annotation;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
@@ -42,8 +45,8 @@ import org.junit.Test;
 import org.junit.internal.AssumptionViolatedException;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
-import org.junit.runners.model.InitializationError;
 import org.junit.runner.notification.RunNotifier;
+import org.junit.runners.model.InitializationError;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -55,9 +58,9 @@ import uk.co.brunella.osgi.bdt.framework.BundleContextWrapper;
 import uk.co.brunella.osgi.bdt.framework.EquinoxFrameworkStarter;
 import uk.co.brunella.osgi.bdt.framework.OSGiFrameworkStarter;
 import uk.co.brunella.osgi.bdt.junit.annotation.Include;
+import uk.co.brunella.osgi.bdt.junit.annotation.OSGiBDTTest;
 import uk.co.brunella.osgi.bdt.junit.annotation.OSGiBundleContext;
 import uk.co.brunella.osgi.bdt.junit.annotation.OSGiService;
-import uk.co.brunella.osgi.bdt.junit.annotation.OSGiBDTTest;
 import uk.co.brunella.osgi.bdt.junit.annotation.StartPolicy;
 import uk.co.brunella.osgi.bdt.junit.runner.model.FrameworkField;
 import uk.co.brunella.osgi.bdt.junit.runner.model.FrameworkMethod;
@@ -75,6 +78,8 @@ import uk.co.brunella.osgi.bdt.junit.runner.statement.RunBeforesStatement;
 import uk.co.brunella.osgi.bdt.junit.runner.statement.Statement;
 import uk.co.brunella.osgi.bdt.repository.BundleRepositoryPersister;
 import uk.co.brunella.osgi.bdt.repository.Deployer;
+import uk.co.brunella.osgi.bdt.repository.model.AttributeElement;
+import uk.co.brunella.osgi.bdt.util.ManifestAttributeParser;
 
 /**
  * The OSGi BDT JUnit runner. Allows to run an OSGiBDTTest under JUnit 4.
@@ -121,6 +126,8 @@ public class OSGiBDTJUnitRunner extends Runner {
   private OSGiFrameworkStarter frameworkStarter;
   private BundleRepository repository;
   private File testBundleFile;
+  private Manifest manifest;
+  private String fragmentHost;
 
   public OSGiBDTJUnitRunner(Class<?> testClass) throws InitializationError {
     validate(testClass);
@@ -129,7 +136,20 @@ public class OSGiBDTJUnitRunner extends Runner {
     this.testClass = new TestClass(testClass);
     repository = loadRepository(testClassAnnotation.repository());
     createDescription(this.testClass);
-    testBundleFile = createJar(repository, testClassAnnotation);
+    manifest = readManifest(testClassAnnotation);
+    fragmentHost = getFragmentHost(manifest);
+    testBundleFile = createJar(repository, manifest, testClassAnnotation);
+  }
+
+  private String getFragmentHost(Manifest manifest) {
+    ManifestAttributeParser parser = new ManifestAttributeParser(manifest);
+    Map<String, AttributeElement[]> attributes = parser.parseAttributes(new String[] { FRAGMENT_HOST } );
+    AttributeElement[] elements = attributes.get(FRAGMENT_HOST);
+    if (elements != null && elements.length > 0) {
+      return elements[0].getValues().get(0);
+    } else {
+      return null;
+    }
   }
 
   private void validate(Class<?> testClass) throws InitializationError {
@@ -168,14 +188,29 @@ public class OSGiBDTJUnitRunner extends Runner {
       String[] frameworkParameters = new String[] { "-clean" };
       BundleContext systemBundleContext = new BundleContextWrapper(frameworkStarter.startFramework(new URL(systemBundleLocation), frameworkParameters));
 
-      installAndStartBundle(systemBundleContext, OSGI_BDT_RUNNER_BUNDLE_NAME);
+      installBundle(systemBundleContext, OSGI_BDT_RUNNER_BUNDLE_NAME).start();
+      
+      List<Bundle> bundleList = new ArrayList<Bundle>();
       
       for (String bundleName : testClassAnnotation.requiredBundles()) {
-        installAndStartBundle(systemBundleContext, bundleName);
+        bundleList.add(installBundle(systemBundleContext, bundleName));
       }
-      
+
       osgiTestBundle = systemBundleContext.installBundle("file:/" + testBundleFile.toString());
-      osgiTestBundle.start();
+
+      if (fragmentHost == null) {
+        for (Bundle bundle : bundleList) {
+          bundle.start();
+        }
+        osgiTestBundle.start();
+      } else {
+        for (Bundle bundle : bundleList) {
+          bundle.start();
+          if (bundle.getSymbolicName().equals(fragmentHost)) {
+            osgiTestBundle = bundle;
+          }
+        }
+      }
     } catch (Exception e) { 
       throw new RuntimeException(e);
     }
@@ -187,9 +222,8 @@ public class OSGiBDTJUnitRunner extends Runner {
     }
   }
   
-  private Bundle installAndStartBundle(BundleContext systemBundleContext, String bundleName) throws BundleException {
+  private Bundle installBundle(BundleContext systemBundleContext, String bundleName) throws BundleException {
     Bundle bundle = systemBundleContext.installBundle(findBundle(bundleName));
-    bundle.start();
     return bundle;
   }
 
@@ -400,19 +434,11 @@ public class OSGiBDTJUnitRunner extends Runner {
   }
 
   
-  private File createJar(BundleRepository repository, OSGiBDTTest annotation) throws InitializationError {
+  private File createJar(BundleRepository repository, Manifest manifest, OSGiBDTTest annotation) throws InitializationError {
     File tempDirectory = new File(repository.getLocation(), Deployer.TEMP_DIRECTORY);
     File testBundleFile = new File(tempDirectory, "testjar.jar");
     try {
       File baseDir = new File(annotation.baseDir());
-      File manifestFile = new File(baseDir, annotation.manifest());
-      Manifest manifest = null;
-      InputStream is = new FileInputStream(manifestFile);
-      try {
-        manifest = new Manifest(is);
-      } finally {
-        is.close();
-      }
       OutputStream os = new FileOutputStream(testBundleFile);
       JarOutputStream jos = new JarOutputStream(os, manifest);
       try {
@@ -430,6 +456,25 @@ public class OSGiBDTJUnitRunner extends Runner {
         jos.close();
       }
       return testBundleFile;
+    } catch (IOException e) {
+      List<Throwable> list = new ArrayList<Throwable>(1);
+      list.add(e);
+      throw new InitializationError(list);
+    }
+  }
+
+  private Manifest readManifest(OSGiBDTTest annotation) throws InitializationError {
+    try {
+      File baseDir = new File(annotation.baseDir());
+      File manifestFile = new File(baseDir, annotation.manifest());
+      Manifest manifest = null;
+      InputStream is = new FileInputStream(manifestFile);
+      try {
+        manifest = new Manifest(is);
+      } finally {
+        is.close();
+      }
+      return manifest;
     } catch (IOException e) {
       List<Throwable> list = new ArrayList<Throwable>(1);
       list.add(e);
