@@ -18,10 +18,7 @@
  */
 package uk.co.brunella.osgi.bdt.util;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
