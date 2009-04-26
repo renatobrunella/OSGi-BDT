@@ -21,12 +21,12 @@ package uk.co.brunella.osgi.bdt.framework;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Dictionary;
 import java.util.Enumeration;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceReference;
 
@@ -42,8 +42,8 @@ public class BundleWrapper implements Bundle {
     return (Enumeration<?>) invokeNoException("findEntries", parameterTypes(String.class, String.class, boolean.class), path, filePattern, recurse);
   }
 
-  public BundleContext getBundleContext() {
-    return (BundleContext) invokeNoException("getBundleContext", parameterTypes());
+  public BundleContextWrapper getBundleContext() {
+    return new BundleContextWrapper(invokeNoException("getBundleContext", parameterTypes()));
   }
 
   public long getBundleId() {
@@ -151,9 +151,11 @@ public class BundleWrapper implements Bundle {
   }
   
   
-  private Object invoke(String method, Class<?>[] parameterTypes, Object... arguments) throws BundleException {
+  private Object invoke(String methodName, Class<?>[] parameterTypes, Object... arguments) throws BundleException {
     try {
-      return bundle.getClass().getMethod(method, parameterTypes).invoke(bundle, arguments);
+      Method method = bundle.getClass().getMethod(methodName, parameterTypes);
+      method.setAccessible(true);
+      return method.invoke(bundle, arguments);
     } catch (Exception e) {
       if (e instanceof InvocationTargetException) {
         throw (BundleException) ((InvocationTargetException) e).getTargetException();
@@ -163,9 +165,11 @@ public class BundleWrapper implements Bundle {
     }
   }
   
-  private Object invokeThrowable(String method, Class<?>[] parameterTypes, Object... arguments) throws Throwable {
+  private Object invokeThrowable(String methodName, Class<?>[] parameterTypes, Object... arguments) throws Throwable {
     try {
-      return bundle.getClass().getMethod(method, parameterTypes).invoke(bundle, arguments);
+      Method method = bundle.getClass().getMethod(methodName, parameterTypes);
+      method.setAccessible(true);
+      return method.invoke(bundle, arguments);
     } catch (Exception e) {
       if (e instanceof InvocationTargetException) {
         throw ((InvocationTargetException) e).getTargetException();
@@ -175,9 +179,11 @@ public class BundleWrapper implements Bundle {
     }
   }
   
-  private Object invokeNoException(String method, Class<?>[] parameterTypes, Object... arguments) {
+  private Object invokeNoException(String methodName, Class<?>[] parameterTypes, Object... arguments) {
     try {
-      return bundle.getClass().getMethod(method, parameterTypes).invoke(bundle, arguments);
+      Method method = bundle.getClass().getMethod(methodName, parameterTypes);
+      method.setAccessible(true);
+      return method.invoke(bundle, arguments);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

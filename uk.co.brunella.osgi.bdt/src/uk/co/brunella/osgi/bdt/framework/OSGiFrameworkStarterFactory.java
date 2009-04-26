@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 brunella ltd
+ * Copyright 2008 - 2009 brunella ltd
  *
  * Licensed under the GPL Version 3 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,20 +18,38 @@
  */
 package uk.co.brunella.osgi.bdt.framework;
 
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.Map;
+
+import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
+import uk.co.brunella.osgi.bdt.junit.annotation.Framework;
+
 public class OSGiFrameworkStarterFactory {
 
-  public static OSGiFrameworkStarter create(String frameworkName) {
-    if (frameworkName == null) {
-      throw new RuntimeException("Framework name cannot be null");
+  private static final Map<Framework, Class<? extends OSGiFrameworkStarter>> OSGI_FRAMEWORK_STARTERS;
+  static {
+    OSGI_FRAMEWORK_STARTERS = new HashMap<Framework, Class<? extends OSGiFrameworkStarter>>();
+    OSGI_FRAMEWORK_STARTERS.put(Framework.EQUINOX, EquinoxFrameworkStarter.class);
+    OSGI_FRAMEWORK_STARTERS.put(Framework.FELIX, FelixFrameworkStarter.class);
+    OSGI_FRAMEWORK_STARTERS.put(Framework.KNOPLERFISH, KnopflerfishFrameworkStarter.class);
+  }
+  
+  public static OSGiFrameworkStarter create(BundleRepository bundleRepository, Framework framework) {
+    if (framework == null) {
+      throw new RuntimeException("Framework cannot be null");
     }
-    String frameworkStarterName = frameworkName.toLowerCase();
-    if ("equinox".equals(frameworkStarterName)) {
-      return new EquinoxFrameworkStarter();
-    } else if ("felix".equals(frameworkStarterName)) {
-      return new FelixFrameworkStarter();
-    } else if ("knopflerfish".equals(frameworkStarterName)) {
-      return new KnopflerfishFrameworkStarter();
+    Class<? extends OSGiFrameworkStarter> frameworkStarterClass = OSGI_FRAMEWORK_STARTERS.get(framework);
+    try {
+      Constructor<? extends OSGiFrameworkStarter> constructor = frameworkStarterClass.getConstructor(BundleRepository.class);
+      return constructor.newInstance(bundleRepository);
+    } catch (Exception e) {
+      throw new RuntimeException("Could not create framework starter for " + framework);
     }
-    throw new RuntimeException("No support for framework " + frameworkName);
+  }
+  
+  public static OSGiFrameworkStarter create(BundleRepository bundleRepository, String frameworkName) {
+    Framework framework = Framework.valueOf(frameworkName.toUpperCase());
+    return create(bundleRepository, framework);
   }
 }

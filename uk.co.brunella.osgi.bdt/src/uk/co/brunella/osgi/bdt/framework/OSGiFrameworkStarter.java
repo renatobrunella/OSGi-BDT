@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 brunella ltd
+ * Copyright 2008 - 2009 brunella ltd
  *
  * Licensed under the GPL Version 3 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,11 @@
  */
 package uk.co.brunella.osgi.bdt.framework;
 
-import java.net.URL;
+import java.io.File;
+
+import org.osgi.framework.BundleException;
+
+import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor;
 
 public interface OSGiFrameworkStarter {
 
@@ -26,8 +30,15 @@ public interface OSGiFrameworkStarter {
   
   String[] defaultArguments();
   
-  // returns BundleContext of system bundle
-  Object startFramework(URL systemBundleLocation, String[] arguments) throws Exception;
+  void startFramework(String systemBundleName, String[] arguments) throws Exception;
   
-  void stopFramework() throws Exception; 
+  void stopFramework() throws Exception;
+  
+  BundleContextWrapper getSystemBundleContext();
+  
+  BundleWrapper installBundle(BundleDescriptor bundleDescriptor) throws BundleException;
+  
+  BundleWrapper installBundle(String bundleName) throws BundleException;
+  
+  BundleWrapper installBundle(File bundleFile) throws BundleException;
 }

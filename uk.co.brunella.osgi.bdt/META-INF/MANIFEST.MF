@@ -72,3 +72,4 @@ Export-Package: junit.extensions;version="4.5.0";uses:="junit.framework",
    org.eclipse.swt.widgets,
    org.eclipse.jface.dialogs",
  uk.co.brunella.osgi.bdt.util;version="2.0.0"
+Import-Package: org.osgi.service.log

@@ -21,6 +21,7 @@ package uk.co.brunella.osgi.bdt.framework;
 import java.io.File;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Dictionary;
 
 import org.osgi.framework.Bundle;
@@ -181,17 +182,21 @@ public class BundleContextWrapper implements BundleContext {
   }
   
   
-  private Object invoke(String method, Class<?>[] parameterTypes, Object... arguments) {
+  private Object invoke(String methodName, Class<?>[] parameterTypes, Object... arguments) {
     try {
-      return bundleContext.getClass().getMethod(method, parameterTypes).invoke(bundleContext, arguments);
+      Method method = bundleContext.getClass().getMethod(methodName, parameterTypes);
+      method.setAccessible(true);
+      return method.invoke(bundleContext, arguments);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
   
-  private Object invokeThrowable(String method, Class<?>[] parameterTypes, Object... arguments) throws Throwable {
+  private Object invokeThrowable(String methodName, Class<?>[] parameterTypes, Object... arguments) throws Throwable {
     try {
-      return bundleContext.getClass().getMethod(method, parameterTypes).invoke(bundleContext, arguments);
+      Method method = bundleContext.getClass().getMethod(methodName, parameterTypes);
+      method.setAccessible(true);
+      return method.invoke(bundleContext, arguments);
     } catch (Exception e) {
       if (e instanceof InvocationTargetException) {
         throw ((InvocationTargetException) e).getTargetException();

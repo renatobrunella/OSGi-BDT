@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 brunella ltd
+ * Copyright 2008 - 2009 brunella ltd
  *
  * Licensed under the GPL Version 3 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,13 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 
-public class EquinoxFrameworkStarter implements OSGiFrameworkStarter {
+import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
+
+public class EquinoxFrameworkStarter extends AbstractOSGiFrameworkStarter {
+
+  public EquinoxFrameworkStarter(BundleRepository bundleRepository) {
+    super(bundleRepository);
+  }
 
   private Class<?> eclipseStarterClass;
 
@@ -34,19 +40,19 @@ public class EquinoxFrameworkStarter implements OSGiFrameworkStarter {
     return new String[] { "-clean" };
   }
   
-  public Object startFramework(URL systemBundleLocation, String[] arguments) throws Exception {
+  public void startFramework(String systemBundleName, String[] arguments) throws Exception {
+    URL systemBundleUrl = bundleFileUrl(systemBundleName);
     // load the EclipseStarter class and call startup
-    URLClassLoader classLoader = new URLClassLoader(new URL[] { systemBundleLocation }, getClass().getClassLoader());
+    URLClassLoader classLoader = new URLClassLoader(new URL[] { systemBundleUrl }, getClass().getClassLoader());
     eclipseStarterClass = classLoader.loadClass("org.eclipse.core.runtime.adaptor.EclipseStarter");
     Method startupMethod = eclipseStarterClass.getDeclaredMethod("startup", String[].class, Runnable.class);
-    return startupMethod.invoke(null, arguments, null);
-    // return org.eclipse.core.runtime.adaptor.EclipseStarter.startup(getOSGiArguments(), null);
+    BundleContextWrapper bundleContext =  new BundleContextWrapper(startupMethod.invoke(null, arguments, null));
+    setSystemBundleContext(bundleContext);
   }
-
+ 
   public void stopFramework() throws Exception {
     Method shutdownMethod = eclipseStarterClass.getDeclaredMethod("shutdown");
     shutdownMethod.invoke(null);
     eclipseStarterClass = null;
-    // org.eclipse.core.runtime.adaptor.EclipseStarter.shutdown();
   }
 }

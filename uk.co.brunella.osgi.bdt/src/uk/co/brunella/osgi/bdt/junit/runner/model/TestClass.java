@@ -27,7 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Assert;
+import junit.framework.AssertionFailedError;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 
@@ -128,7 +129,9 @@ public class TestClass {
 
   public Constructor<?> getOnlyConstructor() {
     Constructor<?>[] constructors = fClass.getConstructors();
-    Assert.assertEquals(1, constructors.length);
+    if (constructors.length != 1) {
+      throw new AssertionFailedError("Test class has more than one constructor");
+    }
     return constructors[0];
   }
 

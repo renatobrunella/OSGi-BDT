@@ -27,5 +27,9 @@ public enum Framework {
   /**
    * Equinox OSGi framework.
    */
-  EQUINOX
+  EQUINOX,
+  
+  FELIX,
+  
+  KNOPLERFISH
 }

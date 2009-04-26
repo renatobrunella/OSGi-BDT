@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 brunella ltd
+ * Copyright 2008 - 2009 brunella ltd
  *
  * Licensed under the GPL Version 3 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,24 +18,62 @@
  */
 package uk.co.brunella.osgi.bdt.framework;
 
+import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.HashMap;
+import java.util.Map;
 
-public class FelixFrameworkStarter implements OSGiFrameworkStarter {
+import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
+import uk.co.brunella.osgi.bdt.repository.Deployer;
 
+public class FelixFrameworkStarter extends AbstractOSGiFrameworkStarter {
+
+  public FelixFrameworkStarter(BundleRepository bundleRepository) {
+    super(bundleRepository);
+  }
+
+  private Class<?> felixStarterClass;
+  private Object felixStarterObject;
+  
   public String systemBundleName() {
-    throw new RuntimeException("not supported yet");
+    return "org.apache.felix.main";
   }
 
   public String[] defaultArguments() {
-    throw new RuntimeException("not supported yet");
+    return new String[] {};
   }
 
-  public Object startFramework(URL systemBundleLocation, String[] arguments) throws Exception {
-    throw new RuntimeException("not supported yet");
+  public void startFramework(String systemBundleName, String[] arguments) throws Exception {
+    URL systemBundleUrl = bundleFileUrl(systemBundleName);
+    URLClassLoader classLoader = new URLClassLoader(new URL[] { systemBundleUrl }, getClass().getClassLoader());
+    felixStarterClass = classLoader.loadClass("org.apache.felix.framework.Felix");
+    Constructor<?> felixConstructor = felixStarterClass.getConstructor(Map.class);
+    felixStarterObject = felixConstructor.newInstance(getFelixConfiguration());
+    Method startMethod = felixStarterClass.getDeclaredMethod("start");
+    startMethod.invoke(felixStarterObject);
+    BundleContextWrapper bundleContext = new BundleWrapper(felixStarterObject).getBundleContext();
+    setSystemBundleContext(bundleContext);
+  }
+
+  @SuppressWarnings("unchecked")
+  private Map getFelixConfiguration() {
+    Map configMap = new HashMap();
+    configMap.put("felix.embedded.execution", "true");
+    File tempDir = new File(getBundleRepository().getLocation(), Deployer.TEMP_DIRECTORY);
+    File felixTempDir = new File(tempDir, "felix");
+    configMap.put("org.osgi.framework.storage", felixTempDir.toString());
+    configMap.put("org.osgi.framework.storage.clean", "onFirstInit");
+    return configMap;
   }
 
   public void stopFramework() throws Exception {
-    throw new RuntimeException("not supported yet");
+    Method stopMethod = felixStarterClass.getDeclaredMethod("stop");
+    stopMethod.invoke(felixStarterObject);
+    felixStarterClass = null;
+    felixStarterObject = null;
   }
 
 }
