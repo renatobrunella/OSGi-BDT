@@ -18,11 +18,13 @@
  */
 package uk.co.brunella.osgi.bdt.framework;
 
+import java.io.File;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 
 import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
+import uk.co.brunella.osgi.bdt.repository.Deployer;
 
 public class EquinoxFrameworkStarter extends AbstractOSGiFrameworkStarter {
 
@@ -41,6 +43,11 @@ public class EquinoxFrameworkStarter extends AbstractOSGiFrameworkStarter {
   }
   
   public void startFramework(String systemBundleName, String[] arguments) throws Exception {
+    File tempDir = new File(getBundleRepository().getLocation(), Deployer.TEMP_DIRECTORY);
+    File equinoxTempDir = new File(tempDir, "equinox");
+    equinoxTempDir.mkdir();
+    System.setProperty("osgi.install.area", "file:/" + equinoxTempDir.toString());
+
     URL systemBundleUrl = bundleFileUrl(systemBundleName);
     // load the EclipseStarter class and call startup
     URLClassLoader classLoader = new URLClassLoader(new URL[] { systemBundleUrl }, getClass().getClassLoader());
