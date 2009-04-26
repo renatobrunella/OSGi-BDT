@@ -36,6 +36,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.osgi.framework.ServiceReference;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -43,9 +44,12 @@ import org.xml.sax.helpers.DefaultHandler;
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor;
 import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
 import uk.co.brunella.osgi.bdt.bundle.VersionRange;
+import uk.co.brunella.osgi.bdt.framework.BundleContextWrapper;
+import uk.co.brunella.osgi.bdt.framework.BundleWrapper;
 import uk.co.brunella.osgi.bdt.framework.OSGiFrameworkStarter;
 import uk.co.brunella.osgi.bdt.framework.OSGiFrameworkStarterFactory;
 import uk.co.brunella.osgi.bdt.repository.BundleRepositoryPersister;
+import uk.co.brunella.osgi.bdt.repository.Deployer;
 import uk.co.brunella.osgi.bdt.runner.result.OSGiTestResult;
 import uk.co.brunella.osgi.bdt.runner.result.OSGiTestResultService;
 
@@ -56,6 +60,7 @@ public class OSGiTestRunner {
   
   private BundleRepository repository;
   private OSGiFrameworkStarter frameworkStarter;
+  private String frameworkName;
   private OSGiBundleDescriptor systemBundleDescriptor;
   private OSGiBundleDescriptor testRunnerBundleDescriptor;
   private List<OSGiBundleDescriptor> requiredBundles;
@@ -64,7 +69,7 @@ public class OSGiTestRunner {
   private Map<String, String> testParameters;
 
   public OSGiTestRunner() {
-    frameworkStarter = OSGiFrameworkStarterFactory.create("equinox");
+    frameworkName = "equinox";
     testRunnerBundleDescriptor = TEST_RUNNER_BUNDLE;
     requiredBundles = new ArrayList<OSGiBundleDescriptor>();
     testBundles = new ArrayList<OSGiBundleDescriptor>();
@@ -118,47 +123,47 @@ public class OSGiTestRunner {
   }
   
   public List<OSGiTestResult> runTests() throws Exception {
-    Object systemBundleContext = startFramework();
+    startFramework();
     
     // list of Bundle
-    List<Object> bundleList = new ArrayList<Object>();
+    List<BundleWrapper> bundleList = new ArrayList<BundleWrapper>();
     try {
       // add required bundles defined in test
       for (OSGiBundleDescriptor descriptor : testBundles) {
         addRequiredBundleFromTest(descriptor);
       }
       
-      Object testRunnerBundle = installBundle(systemBundleContext, testRunnerBundleDescriptor);
+      BundleWrapper testRunnerBundle = frameworkStarter.installBundle(getBundleNameAndVersion(testRunnerBundleDescriptor));
       bundleList.add(testRunnerBundle);
       for (OSGiBundleDescriptor descriptor : requiredBundles) {
-        Object bundle = installBundle(systemBundleContext, descriptor);
+        BundleWrapper bundle = frameworkStarter.installBundle(getBundleNameAndVersion(descriptor));
         if (bundle != null) {
           bundleList.add(bundle);
         }
       }
       
-      List<Object> testBundleList = new ArrayList<Object>();
+      List<BundleWrapper> testBundleList = new ArrayList<BundleWrapper>();
       for (OSGiBundleDescriptor descriptor : testBundles) {
-        Object bundle = installBundle(systemBundleContext, descriptor);
+        BundleWrapper bundle = frameworkStarter.installBundle(getBundleNameAndVersion(descriptor));
         if (bundle != null) {
           testBundleList.add(bundle);
         }
       }
       // start all required bundles
-      for (Object bundle : bundleList) {
-        BundleWrapper.start(bundle);
+      for (BundleWrapper bundle : bundleList) {
+        bundle.start();
       }
       
       // set the test parameters
       if (testParameters.size() > 0) {
-        setTestParameters(BundleWrapper.getBundleContext(testRunnerBundle));
+        setTestParameters(testRunnerBundle.getBundleContext());
       }
 
       // start the test bundles
-      for (Object bundle : testBundleList) {
-        BundleWrapper.start(bundle);
+      for (BundleWrapper bundle : testBundleList) {
+        bundle.start();
       }
-      List<OSGiTestResult> testResults = getTestResults(BundleWrapper.getBundleContext(testRunnerBundle)); 
+      List<OSGiTestResult> testResults = getTestResults(testRunnerBundle.getBundleContext()); 
       return testResults;
     } finally {
       stopFramework();
@@ -191,23 +196,19 @@ public class OSGiTestRunner {
     }
   }
 
-  private Object installBundle(Object systemBundleContext, OSGiBundleDescriptor descriptor) throws Exception {
-    BundleDescriptor bundleDescriptor = resolveBundle(descriptor);
-    String bundleFileName = bundleFileLocation(bundleDescriptor);
-    Object bundle = BundleContextWrapper.installBundle(systemBundleContext, bundleFileName);
-    if (bundleDescriptor.getFragmentHost() == null) {
-      return bundle;
-    } else {
-      return null;
-    }
-  }
-
-  private String bundleFileLocation(BundleDescriptor bundleDescriptor) {
-    return "file:" + bundleFile(bundleDescriptor).toString();
-  }
+//  private Object installBundle(BundleContextWrapper systemBundleContext, OSGiBundleDescriptor descriptor) throws Exception {
+//    BundleDescriptor bundleDescriptor = resolveBundle(descriptor);
+//    String bundleFileName = bundleFileLocation(bundleDescriptor);
+//    Object bundle = systemBundleContext.installBundle(bundleFileName);
+//    if (bundleDescriptor.getFragmentHost() == null) {
+//      return bundle;
+//    } else {
+//      return null;
+//    }
+//  }
 
   private File bundleFile(BundleDescriptor bundleDescriptor) {
-    return new File(repository.getLocation(), "bundles" + File.separator + bundleDescriptor.getBundleJarFileName());
+    return new File(repository.getLocation(), Deployer.BUNDLES_DIRECTORY + File.separator + bundleDescriptor.getBundleJarFileName());
   }
   
   private BundleDescriptor resolveBundle(OSGiBundleDescriptor descriptor) {
@@ -219,16 +220,17 @@ public class OSGiTestRunner {
   }
 
   public void setFramework(String frameworkName) {
-    frameworkStarter = OSGiFrameworkStarterFactory.create(frameworkName);
+    this.frameworkName = frameworkName;
+//    frameworkStarter = OSGiFrameworkStarterFactory.create(frameworkName);
   }
 
-  private Object startFramework() throws Exception {
+  private void startFramework() throws Exception {
+    frameworkStarter = OSGiFrameworkStarterFactory.create(repository, frameworkName);
     // find the system bundle in the repository
     if (systemBundleDescriptor == null) {
       systemBundleDescriptor = new OSGiBundleDescriptor(frameworkStarter.systemBundleName(), VersionRange.parseVersionRange(""));
     }
-    BundleDescriptor systemBundle = resolveBundle(systemBundleDescriptor);
-    String systemBundleLocation = bundleFileLocation(systemBundle);
+    String systemBundleName = getBundleNameAndVersion(systemBundleDescriptor);
 
     // create arguments
     String[] defaults = frameworkStarter.defaultArguments();
@@ -240,7 +242,11 @@ public class OSGiTestRunner {
       args[i + defaults.length] = arguments.get(i);
     }
     
-    return frameworkStarter.startFramework(new URL(systemBundleLocation), args);
+    frameworkStarter.startFramework(systemBundleName, args);
+  }
+
+  private String getBundleNameAndVersion(OSGiBundleDescriptor bundleDescriptor) {
+    return bundleDescriptor.getBundleSymbolicName() + ";version=" + bundleDescriptor.getBundleVersionRange();
   }
   
   private void stopFramework() throws Exception {
@@ -248,12 +254,12 @@ public class OSGiTestRunner {
   }
 
   @SuppressWarnings("unchecked")
-  private List<OSGiTestResult> getTestResults(Object bundleContext) throws Exception {
-    Object reference = BundleContextWrapper.getServiceReference(bundleContext, OSGiTestResultService.class.getName());
-    Object service = BundleContextWrapper.getService(bundleContext, reference);
+  private List<OSGiTestResult> getTestResults(BundleContextWrapper bundleContext) throws Exception {
+    ServiceReference reference = bundleContext.getServiceReference(OSGiTestResultService.class.getName());
+    Object service = bundleContext.getService(reference);
     Method getTestResultsMethod = service.getClass().getDeclaredMethod("getTestResults");
     byte[] serialized = (byte[]) getTestResultsMethod.invoke(service);
-    BundleContextWrapper.ungetService(bundleContext, reference);
+    bundleContext.ungetService(reference);
     
     ByteArrayInputStream bais = null;
     ObjectInputStream ois = null;
@@ -267,12 +273,12 @@ public class OSGiTestRunner {
     }
   }
   
-  private void setTestParameters(Object bundleContext) throws Exception {
-    Object reference = BundleContextWrapper.getServiceReference(bundleContext, OSGiTestResultService.class.getName());
-    Object service = BundleContextWrapper.getService(bundleContext, reference);
+  private void setTestParameters(BundleContextWrapper bundleContext) throws Exception {
+    ServiceReference reference = bundleContext.getServiceReference(OSGiTestResultService.class.getName());
+    Object service = bundleContext.getService(reference);
     Method setTestParametersMethod = service.getClass().getDeclaredMethod("setTestParameters", Map.class);
     setTestParametersMethod.invoke(service, testParameters);
-    BundleContextWrapper.ungetService(bundleContext, reference);
+    bundleContext.ungetService(reference);
   }
 
   private static class OSGiBundleDescriptor {
@@ -295,56 +301,6 @@ public class OSGiTestRunner {
     
     public String toString() {
       return bundleSymbolicName + " " + bundleVersionRange;
-    }
-  }
-
-  private static class BundleWrapper {
-    
-    public static void start(Object bundle) throws Exception {
-      bundle.getClass().getMethod("start").invoke(bundle);
-    }
-    
-    public static void stop(Object bundle) throws Exception {
-      bundle.getClass().getMethod("stop").invoke(bundle);
-    }
-    
-    public static Object getBundleContext(Object bundle) throws Exception {
-      return bundle.getClass().getMethod("getBundleContext").invoke(bundle);
-    }
-  }
-  
-  private static class BundleContextWrapper {
-    
-    public static Object installBundle(Object context, String location) throws Exception {
-      return context.getClass().getMethod("installBundle", String.class).invoke(context, location);
-    }
-    
-    public static Object getServiceReference(Object context, String serviceName) throws Exception {
-      return context.getClass().getMethod("getServiceReference", String.class).invoke(context, serviceName);
-    }
-    
-    public static Object getService(Object context, Object serviceReference) throws Exception {
-      Method[] methods = context.getClass().getMethods();
-      Method getServiceMethod = null;
-      for (Method method : methods) {
-        if (method.getName().equals("getService")) {
-          getServiceMethod = method;
-          break;
-        }
-      }
-      return getServiceMethod.invoke(context, serviceReference);
-    }
-    
-    public static boolean ungetService(Object context, Object serviceReference) throws Exception {
-      Method[] methods = context.getClass().getMethods();
-      Method getServiceMethod = null;
-      for (Method method : methods) {
-        if (method.getName().equals("ungetService")) {
-          getServiceMethod = method;
-          break;
-        }
-      }
-      return (Boolean) getServiceMethod.invoke(context, serviceReference);
     }
   }
 

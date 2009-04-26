@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -48,15 +47,11 @@ import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.model.InitializationError;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
 
-import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor;
 import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
-import uk.co.brunella.osgi.bdt.bundle.VersionRange;
-import uk.co.brunella.osgi.bdt.framework.BundleContextWrapper;
-import uk.co.brunella.osgi.bdt.framework.EquinoxFrameworkStarter;
 import uk.co.brunella.osgi.bdt.framework.OSGiFrameworkStarter;
+import uk.co.brunella.osgi.bdt.framework.OSGiFrameworkStarterFactory;
+import uk.co.brunella.osgi.bdt.junit.annotation.Framework;
 import uk.co.brunella.osgi.bdt.junit.annotation.Include;
 import uk.co.brunella.osgi.bdt.junit.annotation.OSGiBDTTest;
 import uk.co.brunella.osgi.bdt.junit.annotation.OSGiBundleContext;
@@ -117,17 +112,17 @@ public class OSGiBDTJUnitRunner extends Runner {
 
   public static final String OSGI_BDT_RUNNER_BUNDLE_NAME = "uk.co.brunella.osgi.bdt";
   
-  private String testClassName;
-  private TestClass testClass;
+  private final String testClassName;
+  private final TestClass testClass;
+  private final Description testClassDescription;
+  private final OSGiBDTTest testClassAnnotation;
+  private final BundleRepository repository;
+  private final OSGiFrameworkStarter frameworkStarter;
+  private final File testBundleFile;
+  private final Manifest manifest;
+  private final String fragmentHost;
   private TestClass osgiTestClass;
   private Bundle osgiTestBundle;
-  private Description testClassDescription;
-  private OSGiBDTTest testClassAnnotation;
-  private OSGiFrameworkStarter frameworkStarter;
-  private BundleRepository repository;
-  private File testBundleFile;
-  private Manifest manifest;
-  private String fragmentHost;
 
   public OSGiBDTJUnitRunner(Class<?> testClass) throws InitializationError {
     validate(testClass);
@@ -135,8 +130,9 @@ public class OSGiBDTJUnitRunner extends Runner {
     testClassAnnotation = testClass.getAnnotation(OSGiBDTTest.class);
     this.testClass = new TestClass(testClass);
     repository = loadRepository(testClassAnnotation.repository());
-    createDescription(this.testClass);
+    testClassDescription = createDescription(this.testClass);
     manifest = readManifest(testClassAnnotation);
+    frameworkStarter = createFrameworkStarter(repository, testClassAnnotation.framework());
     fragmentHost = getFragmentHost(manifest);
     testBundleFile = createJar(repository, manifest, testClassAnnotation);
   }
@@ -158,11 +154,12 @@ public class OSGiBDTJUnitRunner extends Runner {
     }
   }
   
-  private void createDescription(TestClass testClass) {
-    testClassDescription = Description.createSuiteDescription(testClass.getJavaClass());
+  private Description createDescription(TestClass testClass) {
+    Description testClassDescription = Description.createSuiteDescription(testClass.getJavaClass());
     for (FrameworkMethod method : testClass.getAnnotatedMethods(Test.class.getName())) {
-      testClassDescription.addChild(Description.createTestDescription(testClass.getJavaClass(), method.getName(), method.getAnnotations()));
+      testClassDescription.addChild(Description.createTestDescription(testClass.getJavaClass(), method.getName()/*, method.getAnnotations()*/));
     }
+    return testClassDescription;
   }
 
   @Override
@@ -172,31 +169,32 @@ public class OSGiBDTJUnitRunner extends Runner {
 
   @Override
   public void run(RunNotifier notifier) {
-    frameworkStarter = createFrameworkStarter();
     List<FrameworkMethod> testMethods = computeTestMethods(testClass);
     runTests(notifier, testMethods);
   }
 
-  private EquinoxFrameworkStarter createFrameworkStarter() {
-    EquinoxFrameworkStarter frameworkStarter = new EquinoxFrameworkStarter();
-    return frameworkStarter;
+  private OSGiFrameworkStarter createFrameworkStarter(BundleRepository bundleRepository, Framework framework) {
+    return OSGiFrameworkStarterFactory.create(bundleRepository, framework);
   }
   
   private void startFramework() {
     try {
-      String systemBundleLocation = findBundle(testClassAnnotation.systemBundle()); 
-      String[] frameworkParameters = new String[] { "-clean" };
-      BundleContext systemBundleContext = new BundleContextWrapper(frameworkStarter.startFramework(new URL(systemBundleLocation), frameworkParameters));
+      String systemBundleName = testClassAnnotation.systemBundle();
+      if ("".equals(systemBundleName)) {
+        systemBundleName = frameworkStarter.systemBundleName();
+      }
+      String[] frameworkParameters = frameworkStarter.defaultArguments();
+      frameworkStarter.startFramework(systemBundleName, frameworkParameters);
 
-      installBundle(systemBundleContext, OSGI_BDT_RUNNER_BUNDLE_NAME).start();
+      frameworkStarter.installBundle(OSGI_BDT_RUNNER_BUNDLE_NAME).start();
       
       List<Bundle> bundleList = new ArrayList<Bundle>();
       
       for (String bundleName : testClassAnnotation.requiredBundles()) {
-        bundleList.add(installBundle(systemBundleContext, bundleName));
+        bundleList.add(frameworkStarter.installBundle(bundleName));
       }
 
-      osgiTestBundle = systemBundleContext.installBundle("file:/" + testBundleFile.toString());
+      osgiTestBundle = frameworkStarter.installBundle(testBundleFile);
 
       if (fragmentHost == null) {
         for (Bundle bundle : bundleList) {
@@ -219,31 +217,6 @@ public class OSGiBDTJUnitRunner extends Runner {
       osgiTestClass = new TestClass(osgiTestBundle.loadClass(testClassName));
     } catch (ClassNotFoundException e) {
       throw new RuntimeException(e);
-    }
-  }
-  
-  private Bundle installBundle(BundleContext systemBundleContext, String bundleName) throws BundleException {
-    Bundle bundle = systemBundleContext.installBundle(findBundle(bundleName));
-    return bundle;
-  }
-
-  private String findBundle(String bundleName) {
-    String name;
-    VersionRange versionRange;
-    if (bundleName.contains(";version=")) {
-      name = bundleName.substring(0, bundleName.indexOf(';'));
-      versionRange = VersionRange.parseVersionRange(bundleName.substring(bundleName.indexOf(';') + ";version=".length()));
-    } else {
-      name = bundleName;
-      versionRange = VersionRange.parseVersionRange("");
-    }
-    BundleDescriptor[] descriptors = repository.resolveBundle(name, versionRange, true);
-    if (descriptors.length > 0) {
-      File bundleFiles = new File(repository.getLocation(), Deployer.BUNDLES_DIRECTORY);
-      File bundleFile = new File(bundleFiles, descriptors[0].getBundleJarFileName());
-      return "file:/" + bundleFile;
-    } else {
-      throw new RuntimeException("Cannot find bundle " + bundleName);
     }
   }
 
@@ -351,6 +324,7 @@ public class OSGiBDTJUnitRunner extends Runner {
         }
       }.run();
     } catch (Throwable e) {
+      e.printStackTrace();
       return new FailStatement(e);
     }
 
@@ -430,7 +404,7 @@ public class OSGiBDTJUnitRunner extends Runner {
   
   private Description methodDescription(TestClass testClass, FrameworkMethod testMethod) {
     return Description.createTestDescription(testClass.getJavaClass(),
-        testMethod.getName(), testMethod.getAnnotations());
+        testMethod.getName()/*, testMethod.getAnnotations()*/);
   }
 
   

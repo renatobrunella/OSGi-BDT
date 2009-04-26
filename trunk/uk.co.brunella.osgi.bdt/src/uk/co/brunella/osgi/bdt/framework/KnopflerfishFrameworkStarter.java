@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 brunella ltd
+ * Copyright 2008 - 2009 brunella ltd
  *
  * Licensed under the GPL Version 3 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,13 @@
  */
 package uk.co.brunella.osgi.bdt.framework;
 
-import java.net.URL;
+import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
 
-public class KnopflerfishFrameworkStarter implements OSGiFrameworkStarter {
+public class KnopflerfishFrameworkStarter extends AbstractOSGiFrameworkStarter {
+
+  public KnopflerfishFrameworkStarter(BundleRepository bundleRepository) {
+    super(bundleRepository);
+  }
 
   public String systemBundleName() {
     throw new RuntimeException("not supported yet");
@@ -29,13 +33,12 @@ public class KnopflerfishFrameworkStarter implements OSGiFrameworkStarter {
   public String[] defaultArguments() {
     throw new RuntimeException("not supported yet");
   }
-  
-  public Object startFramework(URL systemBundleLocation, String[] arguments) throws Exception {
-    throw new RuntimeException("not supported yet");
+
+  public void startFramework(String systemBundleName, String[] arguments) throws Exception {
+    throw new RuntimeException("not supported yet");    
   }
 
   public void stopFramework() throws Exception {
-    throw new RuntimeException("not supported yet");
+    throw new RuntimeException("not supported yet");    
   }
-
-}
+ }

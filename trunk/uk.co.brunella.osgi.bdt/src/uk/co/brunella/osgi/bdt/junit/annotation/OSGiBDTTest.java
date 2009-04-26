@@ -117,7 +117,7 @@ public @interface OSGiBDTTest {
    * <br><code>"org.eclipse.osgi;version=[3.4.0,4.0.0)"</code>
    * 
    */
-  String systemBundle() default "org.eclipse.osgi";
+  String systemBundle() default "";
   
   /**
    * An array of required bundles. The bundles specified are installed and started
