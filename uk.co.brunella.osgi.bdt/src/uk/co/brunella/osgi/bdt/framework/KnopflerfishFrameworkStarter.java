@@ -22,16 +22,19 @@ import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
 
 public class KnopflerfishFrameworkStarter extends AbstractOSGiFrameworkStarter {
 
+  public static final String KNOPFLERFISH_SYSTEM_BUNDLE_NAME = "frameworkbundle"; 
+  public static final String KNOPFLERFISH_SYSTEM_BUNDLE_SYMBOLIC_NAME = "org.knopflerfish.framework"; 
+  
   public KnopflerfishFrameworkStarter(BundleRepository bundleRepository) {
     super(bundleRepository);
   }
 
   public String systemBundleName() {
-    throw new RuntimeException("not supported yet");
+    return KNOPFLERFISH_SYSTEM_BUNDLE_SYMBOLIC_NAME;
   }
 
   public String[] defaultArguments() {
-    throw new RuntimeException("not supported yet");
+    return new String[] {};
   }
 
   public void startFramework(String systemBundleName, String[] arguments) throws Exception {

@@ -21,6 +21,7 @@ package uk.co.brunella.osgi.bdt.bundle;
 import static org.osgi.framework.Constants.BUNDLE_CLASSPATH;
 import static org.osgi.framework.Constants.BUNDLE_MANIFESTVERSION;
 import static org.osgi.framework.Constants.BUNDLE_SYMBOLICNAME;
+import static org.osgi.framework.Constants.BUNDLE_NAME;
 import static org.osgi.framework.Constants.BUNDLE_VERSION;
 import static org.osgi.framework.Constants.BUNDLE_VERSION_ATTRIBUTE;
 import static org.osgi.framework.Constants.EXPORT_PACKAGE;
@@ -44,6 +45,7 @@ import java.util.jar.Manifest;
 
 import org.osgi.framework.Constants;
 
+import uk.co.brunella.osgi.bdt.framework.KnopflerfishFrameworkStarter;
 import uk.co.brunella.osgi.bdt.repository.model.AttributeElement;
 import uk.co.brunella.osgi.bdt.util.ManifestAttributeParser;
 
@@ -52,7 +54,7 @@ public class BundleDescriptor implements Serializable {
   private static final long serialVersionUID = -8270432208629234472L;
 
   private final static String[] ATTRIBUTE_NAMES = new String[] {
-    BUNDLE_MANIFESTVERSION, BUNDLE_SYMBOLICNAME, BUNDLE_VERSION, BUNDLE_CLASSPATH, 
+    BUNDLE_MANIFESTVERSION, BUNDLE_SYMBOLICNAME, BUNDLE_NAME, BUNDLE_VERSION, BUNDLE_CLASSPATH, 
     EXPORT_PACKAGE, IMPORT_PACKAGE, REQUIRE_BUNDLE, FRAGMENT_HOST
   };
   
@@ -205,8 +207,18 @@ public class BundleDescriptor implements Serializable {
   }
 
   private void setBundleSymbolicName(Map<String, AttributeElement[]> attributes) throws RuntimeException {
-    AttributeElement element = getMandatory(BUNDLE_SYMBOLICNAME, attributes, false)[0];
-    bundleSymbolicName = element.getValues().get(0);
+    try {
+      AttributeElement element = getMandatory(BUNDLE_SYMBOLICNAME, attributes, false)[0];
+      bundleSymbolicName = element.getValues().get(0);
+    } catch (RuntimeException e) {
+      // workaround for Knopflerfish system bundle
+      AttributeElement[] elements = getOptional(BUNDLE_NAME, attributes, false);
+      if (elements != null && KnopflerfishFrameworkStarter.KNOPFLERFISH_SYSTEM_BUNDLE_NAME.equals(elements[0].getValues().get(0))) {
+        bundleSymbolicName = KnopflerfishFrameworkStarter.KNOPFLERFISH_SYSTEM_BUNDLE_SYMBOLIC_NAME;
+      } else {
+        throw e;
+      }
+    }
   }
 
   private AttributeElement[] getMandatory(String name, Map<String, AttributeElement[]> attributes, boolean multiValue) throws RuntimeException {
