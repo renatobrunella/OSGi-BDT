@@ -18,13 +18,24 @@
  */
 package uk.co.brunella.osgi.bdt.framework;
 
+import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
+
 import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
+import uk.co.brunella.osgi.bdt.repository.Deployer;
+import uk.co.brunella.osgi.bdt.util.FileUtils;
 
 public class KnopflerfishFrameworkStarter extends AbstractOSGiFrameworkStarter {
 
   public static final String KNOPFLERFISH_SYSTEM_BUNDLE_NAME = "frameworkbundle"; 
   public static final String KNOPFLERFISH_SYSTEM_BUNDLE_SYMBOLIC_NAME = "org.knopflerfish.framework"; 
   
+  private Class<?> starterClass;
+  private Object starterObject;
+
   public KnopflerfishFrameworkStarter(BundleRepository bundleRepository) {
     super(bundleRepository);
   }
@@ -38,10 +49,31 @@ public class KnopflerfishFrameworkStarter extends AbstractOSGiFrameworkStarter {
   }
 
   public void startFramework(String systemBundleName, String[] arguments) throws Exception {
-    throw new RuntimeException("not supported yet");    
+    URL systemBundleUrl = bundleFileUrl(systemBundleName);
+    System.setProperty("org.knopflerfish.osgi.registerserviceurlhandler", "false");
+    URLClassLoader classLoader = new URLClassLoader(new URL[] { systemBundleUrl }, getClass().getClassLoader());
+    starterClass = classLoader.loadClass("org.knopflerfish.framework.Framework");
+    
+    Method setPropertyMethod = starterClass.getDeclaredMethod("setProperty", String.class, String.class);
+    File tempDir = new File(getBundleRepository().getLocation(), Deployer.TEMP_DIRECTORY);
+    File knopflerfishTempDir = new File(tempDir, "knopflerfish");
+    if (knopflerfishTempDir.exists()) {
+      FileUtils.deleteDir(knopflerfishTempDir);
+    }
+    knopflerfishTempDir.mkdir();
+    setPropertyMethod.invoke(null, "org.osgi.framework.dir", knopflerfishTempDir.toString());
+    
+    Constructor<?> constructor = starterClass.getConstructor(Object.class);
+    starterObject = constructor.newInstance(new Object[] { null });
+    Method launchMethod = starterClass.getDeclaredMethod("launch", long.class);
+    launchMethod.invoke(starterObject, 0L);
+    Method getSystemBundleContextMethod = starterClass.getDeclaredMethod("getSystemBundleContext");
+    BundleContextWrapper bundleContext = new BundleContextWrapper(getSystemBundleContextMethod.invoke(starterObject));
+    setSystemBundleContext(bundleContext);
   }
 
   public void stopFramework() throws Exception {
-    throw new RuntimeException("not supported yet");    
+    Method shutdownMethod = starterClass.getDeclaredMethod("shutdown");
+    shutdownMethod.invoke(starterObject);
   }
  }
