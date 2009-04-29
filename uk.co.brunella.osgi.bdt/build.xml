@@ -58,6 +58,7 @@
 		<filter token="bundle.version" value="${version}"/>
 		<filter token="junit.version" value="${junit.version}"/>
 		<copy file="${basedir}/manifests/unfiltered.bdt.manifest.mf" tofile="${bin.dir}/filtered.bdt.manifest.mf" filtering="true" />
+		<copy file="${basedir}/manifests/unfiltered.bdt.no-osgi-framework.manifest.mf" tofile="${bin.dir}/filtered.bdt.no-osgi-framework.manifest.mf" filtering="true" />
 		<copy file="${basedir}/manifests/unfiltered.bdt.eclipse.manifest.mf" tofile="${bin.dir}/filtered.bdt.eclipse.manifest.mf" filtering="true" />
 		<copy file="${basedir}/manifests/unfiltered.bdt.osgitestrunner.manifest.mf" tofile="${bin.dir}/filtered.bdt.osgitestrunner.manifest.mf" filtering="true" />
 	</target>
@@ -71,6 +72,8 @@
 				<include name="profiles/*"/>
 			</fileset>
 		</copy>
+
+		<!-- uk.co.brunella.osgi.bdt -->
 		<jar destfile="${dist.dir}/uk.co.brunella.osgi.bdt-${version}.jar" 
 			manifest="${bin.dir}/filtered.bdt.manifest.mf" filesetmanifest="merge">
 			<fileset dir="${bin.dir}">
@@ -111,6 +114,80 @@
 				<!-- OSGi framework -->
 				<include name="org/osgi/framework/*"/>
 			</fileset>
+			<fileset dir="${src-junit.dir}">
+				<!-- JUnit 4.5 -->
+				<include name="org/junit/**"/>
+				<include name="junit/**"/>
+				<include name="org/hamcrest/**"/>
+			</fileset>
+			<fileset dir="${src.dir}">
+				<!-- Environment profiles -->
+				<include name="profiles/*"/>
+				<!-- Command line support -->
+				<include name="uk/co/brunella/osgi/bdt/Main.java"/>
+				<!-- Ant support -->
+				<include name="uk/co/brunella/osgi/bdt/ant/**"/>
+				<!-- Fitnesse support -->
+				<include name="uk/co/brunella/osgi/bdt/fit/**"/>
+				<!-- Junit support -->
+				<include name="uk/co/brunella/osgi/bdt/junit/**"/>
+				<!-- BDT core -->
+				<include name="uk/co/brunella/osgi/bdt/bundle/**"/>
+				<include name="uk/co/brunella/osgi/bdt/framework/**"/>
+				<include name="uk/co/brunella/osgi/bdt/repository/**"/>
+				<include name="uk/co/brunella/osgi/bdt/runner/**"/>
+				<include name="uk/co/brunella/osgi/bdt/util/**"/>
+			</fileset>
+			<manifest> 
+				<attribute name="Bundle-ManifestVersion" value="2" />
+				<attribute name="Bundle-SymbolicName" value="uk.co.brunella.osgi.bdt.source" />
+				<attribute name="Bundle-Version" value="${version}" />
+				<attribute name="Eclipse-SourceBundle" value='uk.co.brunella.osgi.bdt;version="${version}"' />
+				
+				<attribute name="Specification-Title" value="OSGi BDT - Build Deploy Test" />
+				<attribute name="Specification-Version" value="${version}" />
+				<attribute name="Specification-Vendor" value="brunella ltd" />
+				<attribute name="Implementation-Title" value="OSGi BDT - Build Deploy Test" />
+				<attribute name="Implementation-Version" value="${version} ${TODAY}" />
+				<attribute name="Implementation-Vendor" value="brunella ltd" />
+			</manifest>
+		</jar>
+
+		<!-- uk.co.brunella.osgi.bdt.no-osgi-framework -->
+		<jar destfile="${dist.dir}/uk.co.brunella.osgi.bdt.no-osgi-framework-${version}.jar" 
+			manifest="${bin.dir}/filtered.bdt.no-osgi-framework.manifest.mf" filesetmanifest="merge">
+			<fileset dir="${bin.dir}">
+				<!-- JUnit 4.5 -->
+				<include name="org/junit/**"/>
+				<include name="junit/**"/>
+				<include name="org/hamcrest/**"/>
+				<!-- Environment profiles -->
+				<include name="profiles/*"/>
+				<!-- Command line support -->
+				<include name="uk/co/brunella/osgi/bdt/Main.class"/>
+				<!-- Ant support -->
+				<include name="uk/co/brunella/osgi/bdt/ant/**"/>
+				<!-- Fitnesse support -->
+				<include name="uk/co/brunella/osgi/bdt/fit/**"/>
+				<!-- Junit support -->
+				<include name="uk/co/brunella/osgi/bdt/junit/**"/>
+				<!-- BDT core -->
+				<include name="uk/co/brunella/osgi/bdt/bundle/**"/>
+				<include name="uk/co/brunella/osgi/bdt/framework/**"/>
+				<include name="uk/co/brunella/osgi/bdt/repository/**"/>
+				<include name="uk/co/brunella/osgi/bdt/runner/**"/>
+				<include name="uk/co/brunella/osgi/bdt/util/**"/>
+			</fileset>
+			<manifest> 
+				<attribute name="Specification-Title" value="OSGi BDT - Build Deploy Test" />
+				<attribute name="Specification-Version" value="${version}" />
+				<attribute name="Specification-Vendor" value="brunella ltd" />
+				<attribute name="Implementation-Title" value="OSGi BDT - Build Deploy Test" />
+				<attribute name="Implementation-Version" value="${version} ${TODAY}" />
+				<attribute name="Implementation-Vendor" value="brunella ltd" />
+			</manifest>
+		</jar>
+		<jar destfile="${dist.dir}/uk.co.brunella.osgi.bdt.no-osgi-framework-source-${version}.jar">
 			<fileset dir="${src-junit.dir}">
 				<!-- JUnit 4.5 -->
 				<include name="org/junit/**"/>
