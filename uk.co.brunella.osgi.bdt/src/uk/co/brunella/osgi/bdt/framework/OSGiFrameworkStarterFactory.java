@@ -32,7 +32,7 @@ public class OSGiFrameworkStarterFactory {
     OSGI_FRAMEWORK_STARTERS = new HashMap<Framework, Class<? extends OSGiFrameworkStarter>>();
     OSGI_FRAMEWORK_STARTERS.put(Framework.EQUINOX, EquinoxFrameworkStarter.class);
     OSGI_FRAMEWORK_STARTERS.put(Framework.FELIX, FelixFrameworkStarter.class);
-    OSGI_FRAMEWORK_STARTERS.put(Framework.KNOPLERFISH, KnopflerfishFrameworkStarter.class);
+    OSGI_FRAMEWORK_STARTERS.put(Framework.KNOPFLERFISH, KnopflerfishFrameworkStarter.class);
   }
   
   public static OSGiFrameworkStarter create(BundleRepository bundleRepository, Framework framework) {
