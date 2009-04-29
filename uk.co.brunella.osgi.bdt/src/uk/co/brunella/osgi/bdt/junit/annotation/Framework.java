@@ -29,7 +29,13 @@ public enum Framework {
    */
   EQUINOX,
   
+  /**
+   * Felix OSGi framework
+   */
   FELIX,
   
-  KNOPLERFISH
+  /**
+   * Knopflerfish OSGi framework
+   */
+  KNOPFLERFISH
 }
