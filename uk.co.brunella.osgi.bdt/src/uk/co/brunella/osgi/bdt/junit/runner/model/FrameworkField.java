@@ -39,8 +39,8 @@ public class FrameworkField {
     }
     try {
       fField.set(object, value);
-    } catch (IllegalArgumentException e) {
-    } catch (IllegalAccessException e) {
+    } catch (Exception e) {
+      throw new RuntimeException("Could not set field " + fField.toString(), e);
     }
   }
   
