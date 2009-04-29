@@ -18,26 +18,23 @@
  */
 package uk.co.brunella.osgi.bdt.framework;
 
-import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
 
 import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
-import uk.co.brunella.osgi.bdt.repository.Deployer;
-import uk.co.brunella.osgi.bdt.util.FileUtils;
+import uk.co.brunella.osgi.bdt.junit.annotation.Framework;
 
 public class KnopflerfishFrameworkStarter extends AbstractOSGiFrameworkStarter {
 
   public static final String KNOPFLERFISH_SYSTEM_BUNDLE_NAME = "frameworkbundle"; 
-  public static final String KNOPFLERFISH_SYSTEM_BUNDLE_SYMBOLIC_NAME = "org.knopflerfish.framework"; 
+  public static final String KNOPFLERFISH_SYSTEM_BUNDLE_SYMBOLIC_NAME = "org.knopflerfish.framework";
+  private static final String KNOPFLERFISH_STARTER_CLASS_NAME = "org.knopflerfish.framework.Framework";
   
   private Class<?> starterClass;
   private Object starterObject;
 
   public KnopflerfishFrameworkStarter(BundleRepository bundleRepository) {
-    super(bundleRepository);
+    super(Framework.KNOPFLERFISH, bundleRepository);
   }
 
   public String systemBundleName() {
@@ -45,24 +42,16 @@ public class KnopflerfishFrameworkStarter extends AbstractOSGiFrameworkStarter {
   }
 
   public String[] defaultArguments() {
-    return new String[] {};
+    return new String[] {
+        "-Dorg.knopflerfish.osgi.registerserviceurlhandler=false",
+        "-Dorg.osgi.framework.dir={framework.tempdir}"
+    };
   }
 
   public void startFramework(String systemBundleName, String[] arguments) throws Exception {
-    URL systemBundleUrl = bundleFileUrl(systemBundleName);
-    System.setProperty("org.knopflerfish.osgi.registerserviceurlhandler", "false");
-    URLClassLoader classLoader = new URLClassLoader(new URL[] { systemBundleUrl }, getClass().getClassLoader());
-    starterClass = classLoader.loadClass("org.knopflerfish.framework.Framework");
-    
-    Method setPropertyMethod = starterClass.getDeclaredMethod("setProperty", String.class, String.class);
-    File tempDir = new File(getBundleRepository().getLocation(), Deployer.TEMP_DIRECTORY);
-    File knopflerfishTempDir = new File(tempDir, "knopflerfish");
-    if (knopflerfishTempDir.exists()) {
-      FileUtils.deleteDir(knopflerfishTempDir);
-    }
-    knopflerfishTempDir.mkdir();
-    setPropertyMethod.invoke(null, "org.osgi.framework.dir", knopflerfishTempDir.toString());
-    
+    cleanTempDirectory();
+    processArguments(arguments);
+    starterClass = loadStarterClass(systemBundleName, KNOPFLERFISH_STARTER_CLASS_NAME);
     Constructor<?> constructor = starterClass.getConstructor(Object.class);
     starterObject = constructor.newInstance(new Object[] { null });
     Method launchMethod = starterClass.getDeclaredMethod("launch", long.class);
@@ -70,6 +59,15 @@ public class KnopflerfishFrameworkStarter extends AbstractOSGiFrameworkStarter {
     Method getSystemBundleContextMethod = starterClass.getDeclaredMethod("getSystemBundleContext");
     BundleContextWrapper bundleContext = new BundleContextWrapper(getSystemBundleContextMethod.invoke(starterObject));
     setSystemBundleContext(bundleContext);
+  }
+
+  private void processArguments(String[] arguments) {
+    for (String argument : arguments) {
+      Property property = getProperty(argument);
+      if (property.getValue() != null) {
+        System.setProperty(property.getName(), property.getValue());
+      }
+    }
   }
 
   public void stopFramework() throws Exception {

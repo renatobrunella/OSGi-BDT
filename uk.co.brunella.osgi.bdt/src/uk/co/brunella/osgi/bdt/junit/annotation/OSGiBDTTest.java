@@ -133,4 +133,10 @@ public @interface OSGiBDTTest {
    * 
    */
   String[] requiredBundles();
+  
+  /**
+   * An array of arguments that get passed to the framework.
+   * To set properties use <p><code>-Dpropertyname=value</code></p>
+   */
+  String[] arguments() default {};
 }

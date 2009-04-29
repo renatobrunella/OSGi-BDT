@@ -18,21 +18,20 @@
  */
 package uk.co.brunella.osgi.bdt.framework;
 
-import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.Map;
 
 import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
-import uk.co.brunella.osgi.bdt.repository.Deployer;
+import uk.co.brunella.osgi.bdt.junit.annotation.Framework;
 
 public class FelixFrameworkStarter extends AbstractOSGiFrameworkStarter {
 
+  private static final String FELIX_STARTER_CLASS_NAME = "org.apache.felix.framework.Felix";
+
   public FelixFrameworkStarter(BundleRepository bundleRepository) {
-    super(bundleRepository);
+    super(Framework.FELIX, bundleRepository);
   }
 
   private Class<?> felixStarterClass;
@@ -43,29 +42,31 @@ public class FelixFrameworkStarter extends AbstractOSGiFrameworkStarter {
   }
 
   public String[] defaultArguments() {
-    return new String[] {};
+    return new String[] { 
+        "-Dfelix.embedded.execution=true", 
+        "-Dorg.osgi.framework.storage={framework.tempdir}",
+        "-Dorg.osgi.framework.storage.clean=onFirstInit" };
   }
 
   public void startFramework(String systemBundleName, String[] arguments) throws Exception {
-    URL systemBundleUrl = bundleFileUrl(systemBundleName);
-    URLClassLoader classLoader = new URLClassLoader(new URL[] { systemBundleUrl }, getClass().getClassLoader());
-    felixStarterClass = classLoader.loadClass("org.apache.felix.framework.Felix");
+    cleanTempDirectory();
+    felixStarterClass = loadStarterClass(systemBundleName, FELIX_STARTER_CLASS_NAME);
     Constructor<?> felixConstructor = felixStarterClass.getConstructor(Map.class);
-    felixStarterObject = felixConstructor.newInstance(getFelixConfiguration());
+    felixStarterObject = felixConstructor.newInstance(getFelixConfiguration(arguments));
     Method startMethod = felixStarterClass.getDeclaredMethod("start");
     startMethod.invoke(felixStarterObject);
     BundleContextWrapper bundleContext = new BundleWrapper(felixStarterObject).getBundleContext();
     setSystemBundleContext(bundleContext);
   }
 
-  @SuppressWarnings("unchecked")
-  private Map getFelixConfiguration() {
-    Map configMap = new HashMap();
-    configMap.put("felix.embedded.execution", "true");
-    File tempDir = new File(getBundleRepository().getLocation(), Deployer.TEMP_DIRECTORY);
-    File felixTempDir = new File(tempDir, "felix");
-    configMap.put("org.osgi.framework.storage", felixTempDir.toString());
-    configMap.put("org.osgi.framework.storage.clean", "onFirstInit");
+  private Map<String, String> getFelixConfiguration(String[] arguments) {
+    Map<String, String> configMap = new HashMap<String, String>();
+    for (String argument : arguments) {
+      Property property = getProperty(argument);
+      if (property.getValue() != null) {
+        configMap.put(property.getName(), property.getValue());
+      }
+    }
     return configMap;
   }
 

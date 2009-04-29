@@ -18,18 +18,19 @@
  */
 package uk.co.brunella.osgi.bdt.framework;
 
-import java.io.File;
 import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
 
 import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
-import uk.co.brunella.osgi.bdt.repository.Deployer;
+import uk.co.brunella.osgi.bdt.junit.annotation.Framework;
 
 public class EquinoxFrameworkStarter extends AbstractOSGiFrameworkStarter {
 
+  private static final String EQUINOX_STARTER_CLASS_NAME = "org.eclipse.core.runtime.adaptor.EclipseStarter";
+
   public EquinoxFrameworkStarter(BundleRepository bundleRepository) {
-    super(bundleRepository);
+    super(Framework.EQUINOX, bundleRepository);
   }
 
   private Class<?> eclipseStarterClass;
@@ -39,24 +40,31 @@ public class EquinoxFrameworkStarter extends AbstractOSGiFrameworkStarter {
   }
 
   public String[] defaultArguments() {
-    return new String[] { "-clean" };
+    return new String[] { "-clean", "-Dosgi.install.area={framework.tempdir.url}" };
   }
   
   public void startFramework(String systemBundleName, String[] arguments) throws Exception {
-    File tempDir = new File(getBundleRepository().getLocation(), Deployer.TEMP_DIRECTORY);
-    File equinoxTempDir = new File(tempDir, "equinox");
-    equinoxTempDir.mkdir();
-    System.setProperty("osgi.install.area", "file:/" + equinoxTempDir.toString());
-
-    URL systemBundleUrl = bundleFileUrl(systemBundleName);
-    // load the EclipseStarter class and call startup
-    URLClassLoader classLoader = new URLClassLoader(new URL[] { systemBundleUrl }, getClass().getClassLoader());
-    eclipseStarterClass = classLoader.loadClass("org.eclipse.core.runtime.adaptor.EclipseStarter");
+    cleanTempDirectory();
+    String[] eclipseArguments = processArguments(arguments);
+    eclipseStarterClass = loadStarterClass(systemBundleName, EQUINOX_STARTER_CLASS_NAME);
     Method startupMethod = eclipseStarterClass.getDeclaredMethod("startup", String[].class, Runnable.class);
-    BundleContextWrapper bundleContext =  new BundleContextWrapper(startupMethod.invoke(null, arguments, null));
+    BundleContextWrapper bundleContext =  new BundleContextWrapper(startupMethod.invoke(null, eclipseArguments, null));
     setSystemBundleContext(bundleContext);
   }
  
+  private String[] processArguments(String[] arguments) {
+    List<String> eclipseArguments = new ArrayList<String>();
+    for (String argument : arguments) {
+      Property property = getProperty(argument);
+      if (property.getValue() != null) {
+        System.setProperty(property.getName(), property.getValue());
+      } else {
+        eclipseArguments.add(property.getName());
+      }
+    }
+    return eclipseArguments.toArray(new String[eclipseArguments.size()]);
+  }
+
   public void stopFramework() throws Exception {
     Method shutdownMethod = eclipseStarterClass.getDeclaredMethod("shutdown");
     shutdownMethod.invoke(null);
