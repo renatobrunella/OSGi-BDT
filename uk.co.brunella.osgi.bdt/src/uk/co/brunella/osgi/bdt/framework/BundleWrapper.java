@@ -38,6 +38,10 @@ public class BundleWrapper implements Bundle {
     this.bundle = bundle;
   }
   
+  public Object unwrap() {
+    return bundle;
+  }
+
   public Enumeration<?> findEntries(String path, String filePattern, boolean recurse) {
     return (Enumeration<?>) invokeNoException("findEntries", parameterTypes(String.class, String.class, boolean.class), path, filePattern, recurse);
   }

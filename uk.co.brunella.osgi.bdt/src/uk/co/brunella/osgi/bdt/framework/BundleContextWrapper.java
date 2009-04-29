@@ -43,6 +43,10 @@ public class BundleContextWrapper implements BundleContext {
     this.bundleContext = bundleContext;
   }
   
+  public Object unwrap() {
+    return bundleContext;
+  }
+  
   public void addBundleListener(BundleListener listener) {
     invoke("addBundleListener", parameterTypes(BundleListener.class), listener);    
   }
