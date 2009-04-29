@@ -21,8 +21,8 @@ package uk.co.brunella.osgi.bdt.junit.runner.statement;
 import java.util.List;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 
+import uk.co.brunella.osgi.bdt.framework.BundleContextWrapper;
 import uk.co.brunella.osgi.bdt.junit.runner.model.FrameworkField;
 
 public class InjectBundleContextStatement extends Statement {
@@ -42,7 +42,10 @@ public class InjectBundleContextStatement extends Statement {
   @Override
   public void evaluate() throws Throwable {
     if (fFields.size() > 0) {
-      BundleContext bundleContext = fTestBundle.getBundleContext(); 
+      Object bundleContext = fTestBundle.getBundleContext();
+      if (bundleContext instanceof BundleContextWrapper) {
+        bundleContext = ((BundleContextWrapper) bundleContext).unwrap();
+      }
       for (FrameworkField field : fFields) {
         field.set(fTarget, bundleContext);
       }
