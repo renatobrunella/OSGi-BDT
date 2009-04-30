@@ -116,8 +116,8 @@ public class OSGiBDTJUnitRunner extends Runner {
   private final TestClass testClass;
   private final Description testClassDescription;
   private final OSGiBDTTest testClassAnnotation;
-  private final BundleRepository repository;
-  private final OSGiFrameworkStarter frameworkStarter;
+  private final BundleRepository[] repositories;
+  private final OSGiFrameworkStarter[] frameworkStarters;
   private final File testBundleFile;
   private final Manifest manifest;
   private final String fragmentHost;
@@ -129,12 +129,12 @@ public class OSGiBDTJUnitRunner extends Runner {
     testClassName = testClass.getName();
     testClassAnnotation = testClass.getAnnotation(OSGiBDTTest.class);
     this.testClass = new TestClass(testClass);
-    repository = loadRepository(testClassAnnotation.repository());
-    testClassDescription = createDescription(this.testClass);
+    repositories = loadRepositories(testClassAnnotation.repositories());
+    testClassDescription = createDescription(this.testClass, repositories);
     manifest = readManifest(testClassAnnotation);
-    frameworkStarter = createFrameworkStarter(repository, testClassAnnotation.framework());
+    frameworkStarters = createFrameworkStarter(repositories, testClassAnnotation.framework());
     fragmentHost = getFragmentHost(manifest);
-    testBundleFile = createJar(repository, manifest, testClassAnnotation);
+    testBundleFile = createJar(repositories, manifest, testClassAnnotation);
   }
 
   private String getFragmentHost(Manifest manifest) {
@@ -154,12 +154,26 @@ public class OSGiBDTJUnitRunner extends Runner {
     }
   }
   
-  private Description createDescription(TestClass testClass) {
-    Description testClassDescription = Description.createSuiteDescription(testClass.getJavaClass());
-    for (FrameworkMethod method : testClass.getAnnotatedMethods(Test.class.getName())) {
-      testClassDescription.addChild(Description.createTestDescription(testClass.getJavaClass(), method.getName()/*, method.getAnnotations()*/));
+  private Description createDescription(TestClass testClass, BundleRepository[] repositories) {
+    if (repositories.length == 1) {
+      Description testClassDescription = Description.createSuiteDescription(testClass.getJavaClass());
+      for (FrameworkMethod method : testClass.getAnnotatedMethods(Test.class.getName())) {
+        testClassDescription.addChild(methodDescription(testClass, method, 0));
+      }
+      return testClassDescription;
+    } else {
+      Description testParentDescription = Description.createSuiteDescription(testClass.getJavaClass());
+      int index = 0;
+      for (BundleRepository repository : repositories) {
+        index++;
+        Description testClassDescription = Description.createSuiteDescription(repository.getLocation().toString());
+        testParentDescription.addChild(testClassDescription);
+        for (FrameworkMethod method : testClass.getAnnotatedMethods(Test.class.getName())) {
+          testClassDescription.addChild(methodDescription(testClass, method, index));
+        }
+      }
+      return testParentDescription;
     }
-    return testClassDescription;
   }
 
   @Override
@@ -173,11 +187,15 @@ public class OSGiBDTJUnitRunner extends Runner {
     runTests(notifier, testMethods);
   }
 
-  private OSGiFrameworkStarter createFrameworkStarter(BundleRepository bundleRepository, Framework framework) {
-    return OSGiFrameworkStarterFactory.create(bundleRepository, framework);
+  private OSGiFrameworkStarter[] createFrameworkStarter(BundleRepository[] bundleRepositories, Framework framework) {
+    OSGiFrameworkStarter[] starters = new OSGiFrameworkStarter[bundleRepositories.length];
+    for (int i = 0; i < starters.length; i++) {
+      starters[i] = OSGiFrameworkStarterFactory.create(bundleRepositories[i], framework);
+    }
+    return starters;
   }
   
-  private void startFramework() {
+  private void startFramework(OSGiFrameworkStarter frameworkStarter) {
     try {
       String systemBundleName = testClassAnnotation.systemBundle();
       if ("".equals(systemBundleName)) {
@@ -220,31 +238,35 @@ public class OSGiBDTJUnitRunner extends Runner {
     }
   }
 
-  private BundleRepository loadRepository(String repositoryLocation) throws InitializationError {
-    File repositoryDirectory;
-    if (repositoryLocation.startsWith("${") && repositoryLocation.endsWith("}")) {
-      String location = System.getenv(repositoryLocation.substring(2, repositoryLocation.length() - 1));
-      if (location == null) {
-        throw new InitializationError("Repository environment variable " + repositoryLocation + " is not defined");
+  private BundleRepository[] loadRepositories(String[] repositoryLocations) throws InitializationError {
+    List<BundleRepository> repositories = new ArrayList<BundleRepository>(repositoryLocations.length); 
+    for (String repositoryLocation : repositoryLocations) {
+      File repositoryDirectory;
+      if (repositoryLocation.startsWith("${") && repositoryLocation.endsWith("}")) {
+        String location = System.getenv(repositoryLocation.substring(2, repositoryLocation.length() - 1));
+        if (location == null) {
+          throw new InitializationError("Repository environment variable " + repositoryLocation + " is not defined");
+        }
+        repositoryDirectory = new File(location);
+      } else {
+        repositoryDirectory = new File(repositoryLocation);
       }
-      repositoryDirectory = new File(location);
-    } else {
-      repositoryDirectory = new File(repositoryLocation);
+      if (!repositoryDirectory.exists() || !repositoryDirectory.isDirectory()) {
+        throw new InitializationError("Repository " + repositoryDirectory + " does not exist or is not a directory");
+      }
+      BundleRepositoryPersister persister = new BundleRepositoryPersister(repositoryDirectory);
+      try {
+        repositories.add(persister.load());
+      } catch (IOException e) {
+        List<Throwable> list = new ArrayList<Throwable>(1);
+        list.add(e);
+        throw new InitializationError(list);
+      }
     }
-    if (!repositoryDirectory.exists() || !repositoryDirectory.isDirectory()) {
-      throw new InitializationError("Repository " + repositoryDirectory + " does not exist or is not a directory");
-    }
-    BundleRepositoryPersister persister = new BundleRepositoryPersister(repositoryDirectory);
-    try {
-      return persister.load();
-    } catch (IOException e) {
-      List<Throwable> list = new ArrayList<Throwable>(1);
-      list.add(e);
-      throw new InitializationError(list);
-    }
+    return (BundleRepository[]) repositories.toArray(new BundleRepository[repositories.size()]);
   }
 
-  private void stopFramework() {
+  private void stopFramework(OSGiFrameworkStarter frameworkStarter) {
     try {
       frameworkStarter.stopFramework();
     } catch (Exception e) {
@@ -253,29 +275,35 @@ public class OSGiBDTJUnitRunner extends Runner {
   }
 
   private void runTests(RunNotifier notifier, List<FrameworkMethod> testMethods) {
-    if (testClassAnnotation.frameworkStartPolicy() == StartPolicy.ONCE_PER_TEST_CLASS) {
-      startFramework();
-      runBeforeClass(notifier);
-    }
-    for (FrameworkMethod testMethod : testMethods) {
-      if (testClassAnnotation.frameworkStartPolicy() == StartPolicy.ONCE_PER_TEST) {
-        startFramework();
+    int index = 0;
+    for (OSGiFrameworkStarter frameworkStarter : frameworkStarters) {
+      if (frameworkStarters.length > 1) {
+        index++;
       }
-
-      runTest(notifier, testMethod);
-
-      if (testClassAnnotation.frameworkStartPolicy() == StartPolicy.ONCE_PER_TEST) {
-        stopFramework();
+      if (testClassAnnotation.frameworkStartPolicy() == StartPolicy.ONCE_PER_TEST_CLASS) {
+        startFramework(frameworkStarter);
+        runBeforeClass(notifier);
       }
-    }
-    if (testClassAnnotation.frameworkStartPolicy() == StartPolicy.ONCE_PER_TEST_CLASS) {
-      runAfterClass(notifier);
-      stopFramework();
+      for (FrameworkMethod testMethod : testMethods) {
+        if (testClassAnnotation.frameworkStartPolicy() == StartPolicy.ONCE_PER_TEST) {
+          startFramework(frameworkStarter);
+        }
+  
+        runTest(notifier, testMethod, index);
+  
+        if (testClassAnnotation.frameworkStartPolicy() == StartPolicy.ONCE_PER_TEST) {
+          stopFramework(frameworkStarter);
+        }
+      }
+      if (testClassAnnotation.frameworkStartPolicy() == StartPolicy.ONCE_PER_TEST_CLASS) {
+        runAfterClass(notifier);
+        stopFramework(frameworkStarter);
+      }
     }
   }
 
-  private void runTest(RunNotifier notifier, FrameworkMethod testMethod) {
-    TestRunNotifier testNotifier = new TestRunNotifier(notifier, methodDescription(testClass, testMethod));
+  private void runTest(RunNotifier notifier, FrameworkMethod testMethod, int index) {
+    TestRunNotifier testNotifier = new TestRunNotifier(notifier, methodDescription(testClass, testMethod, index));
     if (testMethod.getAnnotation(Ignore.class.getName()) != null) {
       testNotifier.fireTestIgnored();
     } else {
@@ -402,14 +430,19 @@ public class OSGiBDTJUnitRunner extends Runner {
     return testClass.getAnnotatedMethods(Test.class.getName());
   }
   
-  private Description methodDescription(TestClass testClass, FrameworkMethod testMethod) {
-    return Description.createTestDescription(testClass.getJavaClass(),
-        testMethod.getName()/*, testMethod.getAnnotations()*/);
+  private Description methodDescription(TestClass testClass, FrameworkMethod testMethod, int index) {
+    if (index == 0) {
+      return Description.createTestDescription(testClass.getJavaClass(),
+          testMethod.getName() /*, testMethod.getAnnotations()*/);
+    } else {
+      return Description.createTestDescription(testClass.getJavaClass(),
+          testMethod.getName() + " [" + index + "]" /*, testMethod.getAnnotations()*/);
+    }
   }
 
   
-  private File createJar(BundleRepository repository, Manifest manifest, OSGiBDTTest annotation) throws InitializationError {
-    File tempDirectory = new File(repository.getLocation(), Deployer.TEMP_DIRECTORY);
+  private File createJar(BundleRepository[] repositories, Manifest manifest, OSGiBDTTest annotation) throws InitializationError {
+    File tempDirectory = new File(repositories[0].getLocation(), Deployer.TEMP_DIRECTORY);
     File testBundleFile = new File(tempDirectory, "testjar.jar");
     try {
       File baseDir = new File(annotation.baseDir());

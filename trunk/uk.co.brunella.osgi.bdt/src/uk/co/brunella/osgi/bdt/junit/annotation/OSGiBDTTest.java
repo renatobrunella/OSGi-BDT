@@ -90,11 +90,12 @@ public @interface OSGiBDTTest {
   StartPolicy frameworkStartPolicy() default StartPolicy.ONCE_PER_TEST_CLASS;
   
   /**
-   * The OSGi BDT Bundle repository. Must either be an absolut path to
-   * the repository or an environment variable name ${ENV_VARIABLE}.
+   * An array of OSGi BDT Bundle repositories against which the test case is run. 
+   * Must either be an absolut path to the repository or an environment 
+   * variable name ${ENV_VARIABLE}.
    * Defaults to ${OSGI_REPOSITORY}.
    */
-  String repository() default "${OSGI_REPOSITORY}";
+  String[] repositories() default "${OSGI_REPOSITORY}";
   
   /**
    * Specifies which directories to include into the test bundle relative
