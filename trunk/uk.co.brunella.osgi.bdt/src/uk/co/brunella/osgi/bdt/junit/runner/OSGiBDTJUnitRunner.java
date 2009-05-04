@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.JarEntry;
@@ -59,6 +60,7 @@ import uk.co.brunella.osgi.bdt.junit.annotation.OSGiService;
 import uk.co.brunella.osgi.bdt.junit.annotation.StartPolicy;
 import uk.co.brunella.osgi.bdt.junit.runner.model.FrameworkField;
 import uk.co.brunella.osgi.bdt.junit.runner.model.FrameworkMethod;
+import uk.co.brunella.osgi.bdt.junit.runner.model.OSGiBDTTestWrapper;
 import uk.co.brunella.osgi.bdt.junit.runner.model.TestClass;
 import uk.co.brunella.osgi.bdt.junit.runner.model.TestRunNotifier;
 import uk.co.brunella.osgi.bdt.junit.runner.statement.ExpectExceptionStatement;
@@ -73,8 +75,6 @@ import uk.co.brunella.osgi.bdt.junit.runner.statement.RunBeforesStatement;
 import uk.co.brunella.osgi.bdt.junit.runner.statement.Statement;
 import uk.co.brunella.osgi.bdt.repository.BundleRepositoryPersister;
 import uk.co.brunella.osgi.bdt.repository.Deployer;
-import uk.co.brunella.osgi.bdt.repository.model.AttributeElement;
-import uk.co.brunella.osgi.bdt.util.ManifestAttributeParser;
 
 /**
  * The OSGi BDT JUnit runner. Allows to run an OSGiBDTTest under JUnit 4.
@@ -115,45 +115,38 @@ public class OSGiBDTJUnitRunner extends Runner {
   private final String testClassName;
   private final TestClass testClass;
   private final Description testClassDescription;
-  private final OSGiBDTTest testClassAnnotation;
+  private final OSGiBDTTestWrapper testClassAnnotation;
   private final BundleRepository[] repositories;
   private final OSGiFrameworkStarter[] frameworkStarters;
   private final File testBundleFile;
-  private final Manifest manifest;
-  private final String fragmentHost;
+  private final Map<String, String> parameters;
   private TestClass osgiTestClass;
   private Bundle osgiTestBundle;
 
   public OSGiBDTJUnitRunner(Class<?> testClass) throws InitializationError {
-    validate(testClass);
+    this(testClass, new OSGiBDTTestWrapper(testClass.getAnnotation(OSGiBDTTest.class)), null, null);
+  }
+
+  public OSGiBDTJUnitRunner(Class<?> testClass, OSGiBDTTestWrapper testClassAnnotation, File testBundleFile, 
+      Map<String, String> parameters) throws InitializationError {
+    if (testClassAnnotation == null) {
+      throw new InitializationError("OSGiBDTTest annotation is missing");
+    }
     testClassName = testClass.getName();
-    testClassAnnotation = testClass.getAnnotation(OSGiBDTTest.class);
+    this.testClassAnnotation = testClassAnnotation;
     this.testClass = new TestClass(testClass);
     repositories = loadRepositories(testClassAnnotation.repositories());
     testClassDescription = createDescription(this.testClass, repositories);
-    manifest = readManifest(testClassAnnotation);
+    
     frameworkStarters = createFrameworkStarter(repositories, testClassAnnotation.framework());
-    fragmentHost = getFragmentHost(manifest);
-    testBundleFile = createJar(repositories, manifest, testClassAnnotation);
-  }
-
-  private String getFragmentHost(Manifest manifest) {
-    ManifestAttributeParser parser = new ManifestAttributeParser(manifest);
-    Map<String, AttributeElement[]> attributes = parser.parseAttributes(new String[] { FRAGMENT_HOST } );
-    AttributeElement[] elements = attributes.get(FRAGMENT_HOST);
-    if (elements != null && elements.length > 0) {
-      return elements[0].getValues().get(0);
+    if (testBundleFile == null) {
+      this.testBundleFile = createJar(repositories, testClassAnnotation);
     } else {
-      return null;
+      this.testBundleFile = testBundleFile;
     }
+    this.parameters = parameters;
   }
 
-  private void validate(Class<?> testClass) throws InitializationError {
-    if (!testClass.isAnnotationPresent(OSGiBDTTest.class)) {
-      throw new InitializationError("OSGiBDTTest annotation is missing");
-    }
-  }
-  
   private Description createDescription(TestClass testClass, BundleRepository[] repositories) {
     if (repositories.length == 1) {
       Description testClassDescription = Description.createSuiteDescription(testClass.getJavaClass());
@@ -213,15 +206,20 @@ public class OSGiBDTJUnitRunner extends Runner {
       }
 
       osgiTestBundle = frameworkStarter.installBundle(testBundleFile);
+      String fragmentHost = getFragmentHost(osgiTestBundle);
 
       if (fragmentHost == null) {
         for (Bundle bundle : bundleList) {
-          bundle.start();
+          if (getFragmentHost(bundle) == null) {
+            bundle.start();
+          }
         }
         osgiTestBundle.start();
       } else {
         for (Bundle bundle : bundleList) {
-          bundle.start();
+          if (getFragmentHost(bundle) == null) {
+            bundle.start();
+          }
           if (bundle.getSymbolicName().equals(fragmentHost)) {
             osgiTestBundle = bundle;
           }
@@ -236,6 +234,18 @@ public class OSGiBDTJUnitRunner extends Runner {
     } catch (ClassNotFoundException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private String getFragmentHost(Bundle bundle) {
+    @SuppressWarnings("unchecked") Dictionary<String, String> headers = bundle.getHeaders();
+    String fragmentHost = headers.get(FRAGMENT_HOST);
+    if (fragmentHost != null) {
+      fragmentHost = fragmentHost.trim();
+      if (fragmentHost.indexOf(';') >= 0) {
+        fragmentHost = fragmentHost.substring(0, fragmentHost.indexOf(';')).trim();
+      }
+    }
+    return fragmentHost;
   }
 
   private BundleRepository[] loadRepositories(String[] repositoryLocations) throws InitializationError {
@@ -373,7 +383,7 @@ public class OSGiBDTJUnitRunner extends Runner {
   private Statement possiblyExpectingExceptions(FrameworkMethod testMethod,
       Object test, Statement next) {
     @SuppressWarnings("unchecked") Class<? extends Throwable> expectedException = 
-      (Class<? extends Throwable>) getAnnoationValue(testMethod.getAnnotation(Test.class.getName()), "expected");
+      (Class<? extends Throwable>) getAnnotationValue(testMethod.getAnnotation(Test.class.getName()), "expected");
     if (expectedException != null && !expectedException.getName().equals(org.junit.Test.None.class.getName())) {
       return new ExpectExceptionStatement(next, expectedException);
     } else {
@@ -383,7 +393,7 @@ public class OSGiBDTJUnitRunner extends Runner {
   
   private Statement withPotentialTimeout(FrameworkMethod testMethod,
       Object test, Statement next) {
-    Long timeout = (Long) getAnnoationValue(testMethod.getAnnotation(Test.class.getName()), "timeout");
+    Long timeout = (Long) getAnnotationValue(testMethod.getAnnotation(Test.class.getName()), "timeout");
     if (timeout != null && timeout > 0) {
       return new FailOnTimeoutStatement(next, timeout);
     } else {
@@ -415,7 +425,7 @@ public class OSGiBDTJUnitRunner extends Runner {
     return new InjectBundleContextStatement(osgiTestBundle, next, befores, test);
   }
 
-  private Object getAnnoationValue(Annotation annotation, String methodName) {
+  private Object getAnnotationValue(Annotation annotation, String methodName) {
     if (annotation == null) {
       return null;
     }
@@ -441,7 +451,8 @@ public class OSGiBDTJUnitRunner extends Runner {
   }
 
   
-  private File createJar(BundleRepository[] repositories, Manifest manifest, OSGiBDTTest annotation) throws InitializationError {
+  private File createJar(BundleRepository[] repositories, OSGiBDTTestWrapper annotation) throws InitializationError {
+    Manifest manifest = readManifest(annotation);
     File tempDirectory = new File(repositories[0].getLocation(), Deployer.TEMP_DIRECTORY);
     File testBundleFile = new File(tempDirectory, "testjar.jar");
     try {
@@ -470,7 +481,7 @@ public class OSGiBDTJUnitRunner extends Runner {
     }
   }
 
-  private Manifest readManifest(OSGiBDTTest annotation) throws InitializationError {
+  private Manifest readManifest(OSGiBDTTestWrapper annotation) throws InitializationError {
     try {
       File baseDir = new File(annotation.baseDir());
       File manifestFile = new File(baseDir, annotation.manifest());

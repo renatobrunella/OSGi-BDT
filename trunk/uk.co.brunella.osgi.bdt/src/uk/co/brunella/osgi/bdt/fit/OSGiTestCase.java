@@ -26,6 +26,7 @@ import uk.co.brunella.osgi.bdt.runner.result.OSGiTestResult;
 import fit.Fixture;
 import fit.Parse;
 
+@Deprecated
 public class OSGiTestCase extends Fixture {
 
   private OSGiTestRunner testRunner;
