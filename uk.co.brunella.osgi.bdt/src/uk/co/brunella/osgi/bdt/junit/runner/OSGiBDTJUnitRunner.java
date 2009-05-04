@@ -56,6 +56,7 @@ import uk.co.brunella.osgi.bdt.junit.annotation.Framework;
 import uk.co.brunella.osgi.bdt.junit.annotation.Include;
 import uk.co.brunella.osgi.bdt.junit.annotation.OSGiBDTTest;
 import uk.co.brunella.osgi.bdt.junit.annotation.OSGiBundleContext;
+import uk.co.brunella.osgi.bdt.junit.annotation.OSGiParameter;
 import uk.co.brunella.osgi.bdt.junit.annotation.OSGiService;
 import uk.co.brunella.osgi.bdt.junit.annotation.StartPolicy;
 import uk.co.brunella.osgi.bdt.junit.runner.model.FrameworkField;
@@ -67,6 +68,7 @@ import uk.co.brunella.osgi.bdt.junit.runner.statement.ExpectExceptionStatement;
 import uk.co.brunella.osgi.bdt.junit.runner.statement.FailOnTimeoutStatement;
 import uk.co.brunella.osgi.bdt.junit.runner.statement.FailStatement;
 import uk.co.brunella.osgi.bdt.junit.runner.statement.InjectBundleContextStatement;
+import uk.co.brunella.osgi.bdt.junit.runner.statement.InjectParametersStatement;
 import uk.co.brunella.osgi.bdt.junit.runner.statement.InjectServicesStatement;
 import uk.co.brunella.osgi.bdt.junit.runner.statement.InvokeMethodStatement;
 import uk.co.brunella.osgi.bdt.junit.runner.statement.ReflectiveCallable;
@@ -373,6 +375,7 @@ public class OSGiBDTJUnitRunner extends Runner {
     statement = withAfters(testMethod, test, statement);
     statement = withServiceInjection(testMethod, test, statement);
     statement = withBundleContextInjection(testMethod, test, statement);
+    statement = withParamterInjection(testMethod, test, statement);
     return statement;
   }
 
@@ -409,7 +412,7 @@ public class OSGiBDTJUnitRunner extends Runner {
 
   private Statement withAfters(FrameworkMethod testMethod,
       Object test, Statement next) {
-    List<FrameworkMethod> afters= osgiTestClass.getAnnotatedMethods(After.class.getName());
+    List<FrameworkMethod> afters = osgiTestClass.getAnnotatedMethods(After.class.getName());
     return new RunAftersStatement(next, afters, test);
   }
   
@@ -423,6 +426,16 @@ public class OSGiBDTJUnitRunner extends Runner {
       Object test, Statement next) {
     List<FrameworkField> befores = osgiTestClass.getAnnotatedFields(OSGiBundleContext.class.getName());
     return new InjectBundleContextStatement(osgiTestBundle, next, befores, test);
+  }
+  
+  private Statement withParamterInjection(FrameworkMethod testMethod,
+      Object test, Statement next) {
+    if (parameters != null) {
+      List<FrameworkMethod> befores = osgiTestClass.getAnnotatedMethods(OSGiParameter.class.getName());
+      return new InjectParametersStatement(osgiTestBundle, next, befores, test, parameters);
+    } else {
+      return next;
+    }
   }
 
   private Object getAnnotationValue(Annotation annotation, String methodName) {
