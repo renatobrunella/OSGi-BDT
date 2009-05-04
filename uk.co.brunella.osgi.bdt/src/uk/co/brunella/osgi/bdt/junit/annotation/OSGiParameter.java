@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 
 /**
  * Parameter injection annotation for OSGiBDTFitTest fixture.
- * Method must have the signature <code>void set(String name, String value)</code>.
+ * Method must have the signature <code>void set(Map<String, String> parameters)</code>.
  * Method name can be any valid name.  
  */
 @Retention(RetentionPolicy.RUNTIME)
