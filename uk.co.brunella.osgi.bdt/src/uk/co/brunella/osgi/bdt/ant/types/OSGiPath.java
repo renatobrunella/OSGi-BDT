@@ -87,7 +87,8 @@ public class OSGiPath extends Path {
       try {
         resolveBundle();
       } catch (IOException e) {
-        throw new BuildException(e.getMessage());
+        System.err.println(e.getMessage());
+//        throw new BuildException(e.getMessage());
       }
     }
   }
