@@ -61,14 +61,19 @@ public class OSGiPath extends Path {
       Manifest manifest = new Manifest(fis);
       descriptor = new BundleDescriptor("", manifest);
     } catch (IOException e) {
-      e.printStackTrace();
-      throw new BuildException(e.getMessage());
+      System.err.println(e.getMessage());
+      if (failOnUnresolved) {
+        throw new BuildException(e.getMessage());
+      }
     } finally {
       if (fis != null) {
         try {
           fis.close();
         } catch (IOException e) {
-          throw new BuildException(e.getMessage());
+          System.err.println(e.getMessage());
+          if (failOnUnresolved) {
+            throw new BuildException(e.getMessage());
+          }
         }
       }
     }
@@ -76,7 +81,10 @@ public class OSGiPath extends Path {
       try {
         resolveBundle();
       } catch (IOException e) {
-        throw new BuildException(e.getMessage());
+        System.err.println(e.getMessage());
+        if (failOnUnresolved) {
+          throw new BuildException(e.getMessage());
+        }
       }
     }
   }
@@ -88,7 +96,9 @@ public class OSGiPath extends Path {
         resolveBundle();
       } catch (IOException e) {
         System.err.println(e.getMessage());
-//        throw new BuildException(e.getMessage());
+        if (failOnUnresolved) {
+          throw new BuildException(e.getMessage());
+        }
       }
     }
   }
