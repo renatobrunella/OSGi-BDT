@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 brunella ltd
+ * Copyright 2008 - 2009 brunella ltd
  *
  * Licensed under the GPL Version 3 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,6 +44,8 @@ public class OSGiPath extends Path {
   private boolean verbose = false;
   private int resolveLevel = 0;
   private String resolve = "package";
+  private boolean resolveLazy = false;
+  private boolean isResolved = false;
 
   public OSGiPath(Project p) {
     super(p);
@@ -61,45 +63,25 @@ public class OSGiPath extends Path {
       Manifest manifest = new Manifest(fis);
       descriptor = new BundleDescriptor("", manifest);
     } catch (IOException e) {
-      System.err.println(e.getMessage());
-      if (failOnUnresolved) {
-        throw new BuildException(e.getMessage());
-      }
+      throw new BuildException(e.getMessage());
     } finally {
       if (fis != null) {
         try {
           fis.close();
         } catch (IOException e) {
-          System.err.println(e.getMessage());
-          if (failOnUnresolved) {
-            throw new BuildException(e.getMessage());
-          }
+          log(e.getMessage(), Project.MSG_ERR);
         }
       }
     }
-    if (repositoryDirectory != null) {
-      try {
-        resolveBundle();
-      } catch (IOException e) {
-        System.err.println(e.getMessage());
-        if (failOnUnresolved) {
-          throw new BuildException(e.getMessage());
-        }
-      }
+    if (!resolveLazy && repositoryDirectory != null) {
+      resolveBundle();
     }
   }
   
   public void setRepository(File repository) {
     repositoryDirectory = repository;
-    if (descriptor != null) {
-      try {
-        resolveBundle();
-      } catch (IOException e) {
-        System.err.println(e.getMessage());
-        if (failOnUnresolved) {
-          throw new BuildException(e.getMessage());
-        }
-      }
+    if (!resolveLazy && descriptor != null) {
+      resolveBundle();
     }
   }
 
@@ -107,9 +89,18 @@ public class OSGiPath extends Path {
   private Set<ExportPackage> resolved;
   private Set<BundleDescriptor> resolvedBundles;
   
-  private void resolveBundle() throws IOException {
+  private void resolveBundle() {
+    log("Resolve classpath", Project.MSG_VERBOSE);
+    isResolved = true;
     BundleRepositoryPersister persister = new BundleRepositoryPersister(repositoryDirectory);
-    BundleRepository repository = persister.load();
+    BundleRepository repository = null;
+    try {
+      repository = persister.load();
+    } catch (IOException e) {
+      // cannot load repository - create an empty one
+      log("Repository " + repositoryDirectory + " cannot be loaded", Project.MSG_WARN);
+      repository = new BundleRepository("J2SE-1.5");
+    }
 
     unresolved = new HashSet<ImportPackage>();
     resolved = new HashSet<ExportPackage>();
@@ -151,11 +142,11 @@ public class OSGiPath extends Path {
       if (failOnUnresolved || (mandatoryUnresolved && failOnUnresolvedMandatory)) {
         throw new BuildException(sb.toString());
       } else {
-        System.err.println(sb.toString());
+        log(sb.toString(), Project.MSG_ERR);
       }
     }
     if (verbose) {
-      System.out.println("Classpath elements:");
+      log("Classpath elements:");
     }
     
     if (resolveToBundle) {
@@ -174,7 +165,7 @@ public class OSGiPath extends Path {
               exportDescriptor.getBundleSymbolicName() + File.separator + exportDescriptor.getBundleVersion() +
               File.separator + exportPackage.getName() + File.separator + exportPackage.getVersion());
           if (verbose) {
-            System.out.println("\t" + path.toString());
+            log("\t" + path.toString());
           }
           createPathElement().setPath(path.toString());
         }
@@ -190,24 +181,24 @@ public class OSGiPath extends Path {
       for (int i = 0; i < classpath.length; i++) {
         String bundlePath = basePath + classpath[i];
         if (verbose) {
-          System.out.println("\t" + bundlePath);
+          log("\t" + bundlePath);
         }
         createPathElement().setPath(bundlePath);
       }
     }
     if (verbose) {
-      System.out.println(" ");
+      log(" ");
     }
   }
 
-  private void resolveBundle(int level, BundleDescriptor descriptor, BundleRepository repository) throws IOException {
+  private void resolveBundle(int level, BundleDescriptor descriptor, BundleRepository repository) {
     if (resolvedBundles.contains(descriptor)) {
       return;
     } else {
       resolvedBundles.add(descriptor);
     }
     if (verbose) {
-      System.out.println("Resolving imports for bundle " + descriptor.getBundleSymbolicName() + " " + descriptor.getBundleVersion());
+      log("Resolving imports for bundle " + descriptor.getBundleSymbolicName() + " " + descriptor.getBundleVersion());
     }
     Set<BundleDescriptor> unresolvedBundles = new HashSet<BundleDescriptor>();
     for (ImportPackage importPackage : descriptor.getImportPackages()) {
@@ -253,4 +244,25 @@ public class OSGiPath extends Path {
     }
   }
 
+  public void setResolveLazy(boolean resolveLazy) {
+    this.resolveLazy = resolveLazy;
+  }
+
+  /*
+   * Hook for resolving lazily. Works for javac task.
+   * 
+   * (non-Javadoc)
+   * @see org.apache.tools.ant.types.Path#isFilesystemOnly()
+   */
+  @Override
+  public synchronized boolean isFilesystemOnly() {
+    if (resolveLazy && !isResolved) {
+      resolveBundle();
+    }
+    return super.isFilesystemOnly();
+  }
+  
+  public void log(String msg, int msgLevel) {
+    super.log(" [osgi-path] " + msg, msgLevel);
+  }
 }
