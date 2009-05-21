@@ -2,7 +2,7 @@
 <project name="--- full build ---" basedir="." default="build">
 	
 	<!-- OSGi Ant taskdefs -->
-	<property name="bdt.jar" value="${basedir}/uk.co.brunella.osgi.bdt.support-1.5.1.jar" />
+	<property name="bdt.jar" value="${basedir}/uk.co.brunella.osgi.bdt-2.2.0.jar" />
 	<taskdef name="osgi-build" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiBuild" classpath="${bdt.jar}" />
 	<taskdef name="osgi-create" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiCreate" classpath="${bdt.jar}" />
 	<taskdef name="osgi-deploy" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiDeploy" classpath="${bdt.jar}" />
@@ -51,7 +51,18 @@
 			</fileset>
 		</copy>
 	</target>
-	
+		
+	<target name="clean-all">
+		<osgi-build manifestfile="./META-INF/MANIFEST.MF" buildfile="build.xml" buildtarget="clean"
+			repository="${repository.dir}" fullrebuild="true" >
+			<dirset dir="${basedir}/..">
+				<include name="${bundle.name.prefix}*"/>
+				<include name="${bundle.name.test.prefix}*" />
+			</dirset>
+		</osgi-build>
+		<delete dir="${bundle.dist.dir}" />
+	</target>
+
 	<target name="build-fullrebuild">
 		<property name="fullrebuild" value="true" />
 		<antcall target="bundle-build" />
