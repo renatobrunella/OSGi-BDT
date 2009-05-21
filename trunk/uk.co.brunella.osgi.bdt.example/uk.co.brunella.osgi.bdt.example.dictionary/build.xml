@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project name="dictionary" basedir="." default="repository-deploy">
-
-	<import file="../build/generic-bundle-build.xml" />
-	
-</project>
