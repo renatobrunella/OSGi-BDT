@@ -1,4 +1,4 @@
-package uk.co.brunella.osgi.bdt.example.sensor.temperature.ice;
+package uk.co.brunella.osgi.bdt.example.sensor.temperature.engine;
 
 import java.util.Random;
 
