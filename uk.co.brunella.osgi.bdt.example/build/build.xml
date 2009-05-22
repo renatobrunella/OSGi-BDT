@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project name="--- full build ---" basedir="." default="build">
+<project name="--- full build ---" basedir="." default="build-with-bootstrap">
 	
 	<!-- OSGi Ant taskdefs -->
 	<property name="bdt.jar" value="${basedir}/uk.co.brunella.osgi.bdt-2.2.0.jar" />
@@ -14,7 +14,6 @@
 	<property name="reports.junit.dir" value="${reports.dir}/junit" />
 	<property name="reports.coverage.dir" value="${reports.dir}/coverage" />
 	<property name="bundle.dist.dir" value="${basedir}/dist" />
-	<property name="bundle.dist.test.dir" value="${basedir}/dist-test" />
 
 	<target name="clean-all">
 		<osgi-build manifestfile="./META-INF/MANIFEST.MF" buildfile="build.xml" buildtarget="clean"
@@ -114,7 +113,7 @@
 		</emma>
 	</target>
 	
-	<target name="build-with-reports" depends="build-fullrebuild,junit-report,coverage-report" />
+	<target name="build-with-reports" depends="build-fullrebuild,integration-tests,junit-report,coverage-report" />
 
 	<target name="bootstrap">
 		<delete dir="${repository.dir}" />
