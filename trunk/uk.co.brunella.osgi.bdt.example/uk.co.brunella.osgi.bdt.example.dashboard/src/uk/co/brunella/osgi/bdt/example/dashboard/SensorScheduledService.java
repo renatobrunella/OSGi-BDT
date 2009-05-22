@@ -32,6 +32,7 @@ public class SensorScheduledService implements SchedulerCallback {
           reportTooHigh(sensorName, temperature);
         }
       }
+      System.out.println();
     }
   }
   
