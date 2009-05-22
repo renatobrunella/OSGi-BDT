@@ -194,6 +194,9 @@
 			<instr instrpathref="emma.instr.classpath" destdir="${bin.instr.dir}" 
 				metadatafile="${coverage.dir}/metadata.emma" merge="true" />
 		</emma>
+		<copy todir="${bin.instr.dir}" overwrite="false">
+			<fileset dir="${bin.dir}" />
+		</copy>
 		<copy todir="${bin.instr.dir}">
 			<fileset dir="../build/emma" />
 		</copy>
