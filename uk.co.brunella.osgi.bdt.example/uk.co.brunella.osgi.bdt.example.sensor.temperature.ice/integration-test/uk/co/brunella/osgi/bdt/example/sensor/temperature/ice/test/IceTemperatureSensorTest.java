@@ -22,7 +22,7 @@ import uk.co.brunella.osgi.bdt.junit.runner.OSGiBDTJUnitRunner;
     repositories = "../build/repository",
     manifest = "integration-test/META-INF/MANIFEST.MF",
     framework = Framework.EQUINOX,
-    buildIncludes = { @Include(source = "bin-test", dest = "") },
+    buildIncludes = { @Include(source = "bin-integration-test", dest = "") },
     frameworkStartPolicy = StartPolicy.ONCE_PER_TEST,
     requiredBundles = { 
         "uk.co.brunella.osgi.bdt.example.sensor.temperature", 
