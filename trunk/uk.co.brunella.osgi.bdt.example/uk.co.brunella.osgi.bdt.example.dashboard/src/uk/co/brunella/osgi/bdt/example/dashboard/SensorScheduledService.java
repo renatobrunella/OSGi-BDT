@@ -16,33 +16,35 @@ public class SensorScheduledService implements SchedulerCallback {
 
   public void callback() {
     ServiceReference[] references = tracker.getServiceReferences();
-    for (ServiceReference reference : references) {
-      TemperatureSensor sensor = (TemperatureSensor) tracker.getService(reference);
-      Double minTemperature = (Double) reference.getProperty(TemperatureSensor.MIN_TEMPERATURE); 
-      Double maxTemperature = (Double) reference.getProperty(TemperatureSensor.MAX_TEMPERATURE);
-      String sensorName = (String) reference.getProperty(TemperatureSensor.SENSOR_NAME);
-      
-      double temperature = sensor.readTemperature();
-      if (temperature >= minTemperature && temperature <= maxTemperature) {
-        reportNormal(sensorName, temperature);
-      } else if (temperature < minTemperature) {
-        reportTooLow(sensorName, temperature);
-      } else {
-        reportTooHigh(sensorName, temperature);
+    if (references != null) {
+      for (ServiceReference reference : references) {
+        TemperatureSensor sensor = (TemperatureSensor) tracker.getService(reference);
+        Double minTemperature = (Double) reference.getProperty(TemperatureSensor.MIN_TEMPERATURE); 
+        Double maxTemperature = (Double) reference.getProperty(TemperatureSensor.MAX_TEMPERATURE);
+        String sensorName = (String) reference.getProperty(TemperatureSensor.SENSOR_NAME);
+        
+        double temperature = sensor.readTemperature();
+        if (temperature >= minTemperature && temperature <= maxTemperature) {
+          reportNormal(sensorName, temperature);
+        } else if (temperature < minTemperature) {
+          reportTooLow(sensorName, temperature);
+        } else {
+          reportTooHigh(sensorName, temperature);
+        }
       }
     }
   }
   
   protected void reportNormal(String sensorName, double temperature) {
-    System.out.println(String.format("Sensor %s is normal (%3.2f)", sensorName, temperature));
+    System.out.println(String.format("%s is normal (%3.2f)", sensorName, temperature));
   }
 
   protected void reportTooHigh(String sensorName, double temperature) {
-    System.err.println(String.format("WARNING: Sensor %s is too high (%3.2f)", sensorName, temperature));
+    System.err.println(String.format("WARNING: %s is too high (%3.2f)", sensorName, temperature));
   }
 
   protected void reportTooLow(String sensorName, double temperature) {
-    System.err.println(String.format("WARNING: Sensor %s is too low (%3.2f)", sensorName, temperature));
+    System.err.println(String.format("WARNING: %s is too low (%3.2f)", sensorName, temperature));
   }
 
 }
