@@ -15,6 +15,7 @@
 	<typedef name="osgi-path" classname="uk.co.brunella.osgi.bdt.ant.types.OSGiPath" classpath="${bdt.jar}" />
 
 	<property name="buildrepository.dir" value="${basedir}/../build/repository" />
+	<property name="buildrepository.instr.dir" value="${basedir}/../build/repository-instrumented" />
 
 	<!-- read bundle symbolic name and version from manifest into properties bundle.name, bundle.version -->
 	<osgi-manifest manifest="${basedir}/META-INF/MANIFEST.MF" />
@@ -31,9 +32,12 @@
 	<property name="bin.test.dir" value="${basedir}/${bin.test.path}" />
 	<property name="bin.instr.path" value="bin-instr" />
 	<property name="bin.instr.dir" value="${basedir}/${bin.instr.path}" />
+	<property name="bin.integration.test.path" value="bin-integration-test" />
+	<property name="bin.integration.test.dir" value="${basedir}/${bin.integration.test.path}" />
 	<property name="src.path" value="src" />
 	<property name="src.dir" value="${basedir}/${src.path}" />
 	<property name="src.test.dir" value="${basedir}/test" />
+	<property name="src.integration.test.dir" value="${basedir}/integration-test" />
 	<property name="lib.path" value="lib" />
 	<property name="lib.dir" value="${basedir}/${lib.path}" />
 	<property name="buildlib.path" value="../build" />
@@ -44,10 +48,9 @@
 	<property name="junit.output.dir" value="${basedir}/${junit.output.path}" />
 	<property name="coverage.path" value="coverage" />
 	<property name="coverage.dir" value="${basedir}/${coverage.path}" />
-	<property name="integrationtest.output.path" value="integrationtest" />
-	<property name="integrationtest.output.dir" value="${basedir}/${integrationtest.output.path}" />
 
 	<property name="bundle.jar" value="${dist.dir}/${bundle.name}-${bundle.version}.jar" />
+	<property name="bundle-instrumented.jar" value="${dist.dir}/${bundle.name}-instrumented-${bundle.version}.jar" />
 	<property name="bundle-src.jar" value="${dist.dir}/${bundle.name}-source-${bundle.version}.jar" />
 
 	<path id="emma.instr.classpath">
@@ -62,7 +65,7 @@
 		<pathelement location="${buildlib.dir}/osgi.core.jar" />
 		<pathelement location="${buildlib.dir}/osgi.cmpn.jar" />
 		<pathelement location="${buildlib.dir}/spring-osgi-mock-1.1.0-m2.jar" />
-		<pathelement location="${buildlib.dir}/junit-4.4.jar" />
+		<pathelement location="${buildlib.dir}/uk.co.brunella.osgi.bdt-2.2.0.jar" />
 		<pathelement location="${buildlib.dir}/emma.jar" />
 		<pathelement location="${buildlib.dir}/emma_ant.jar" />
 	</path>
@@ -94,10 +97,22 @@
 		</fileset>
 	</osgi-path>
 
+	<osgi-path id="integrationtestclasspath" resolve="bundle" verbose="false" failonunresolved="false"
+			   repository="${buildrepository.dir}" manifest="${basedir}/META-INF/MANIFEST.MF">
+		<pathelement location="${bin.integration.test.dir}" />
+        <fileset dir="${lib.dir}">
+		  <include name="**/*.jar"/>
+		</fileset>
+        <fileset dir="${buildlib.dir}">
+		  <include name="**/*.jar"/>
+		</fileset>
+	</osgi-path>
+
 	<target name="init">
 		<mkdir dir="${bin.dir}" />
 		<mkdir dir="${bin.test.dir}" />
 		<mkdir dir="${bin.instr.dir}" />
+		<mkdir dir="${bin.integration.test.dir}" />
 		<mkdir dir="${dist.dir}" />
 		<mkdir dir="${junit.output.dir}" />
 		<mkdir dir="${coverage.dir}" />
@@ -107,6 +122,7 @@
 		<delete dir="${bin.dir}" />
 		<delete dir="${bin.test.dir}" />
 		<delete dir="${bin.instr.dir}" />
+		<delete dir="${bin.integration.test.dir}" />
 		<delete dir="${dist.dir}" />
 		<delete dir="${junit.output.dir}" failonerror="no" />
 		<delete dir="${coverage.dir}" />
@@ -117,9 +133,15 @@
 			<src path="${src.dir}" />
 			<classpath refid="buildclasspath" />
 		</javac>
+		<antcall target="instrument" />
 		<javac debug="true" debuglevel="${debuglevel}" destdir="${bin.test.dir}" 
 			source="${source}" target="${target}" deprecation="false">
 			<src path="${src.test.dir}" />
+			<classpath refid="testclasspath" />
+		</javac>
+		<javac debug="true" debuglevel="${debuglevel}" destdir="${bin.integration.test.dir}" 
+			source="${source}" target="${target}" deprecation="false">
+			<src path="${src.integration.test.dir}" />
 			<classpath refid="testclasspath" />
 		</javac>
 	</target>
@@ -139,6 +161,23 @@
 		<fail if="junit.failure"/>
 	</target>
 
+	<target name="run-integration-tests">
+		<junit fork="yes" printsummary="withOutAndErr" failureproperty="junit.failure" dir="${basedir}">
+			<formatter type="xml" />
+			<classpath refid="integrationtestclasspath" />
+            <batchtest fork="yes" todir="${junit.output.dir}" >
+              <fileset dir="${bin.integration.test.dir}" >
+                <include name="**/*Test.class" />
+                <include name="**/Test*.class" />
+              </fileset>
+            </batchtest>
+		</junit>
+		<antcall target="junitreport" />
+		<fail if="junit.failure"/>
+		<available file="${coverage.dir}/coverage.emma" property="coverage-exists" />
+		<antcall target="create-coverage-report" />
+	</target>
+
 	<target name="junitreport">
 		<junitreport todir="${junit.output.dir}">
 			<fileset dir="${junit.output.dir}">
@@ -148,15 +187,19 @@
 		</junitreport>
 	</target>
 
-	<target name="coverage" depends="build" >
+	<target name="instrument">
 		<delete file="${coverage.dir}/metadata.emma" />
 		<delete file="${coverage.dir}/coverage.emma" />
-
 		<emma enabled="true" verbosity="info">
 			<instr instrpathref="emma.instr.classpath" destdir="${bin.instr.dir}" 
 				metadatafile="${coverage.dir}/metadata.emma" merge="true" />
 		</emma>
-	
+		<copy todir="${bin.instr.dir}">
+			<fileset dir="../build/emma" />
+		</copy>
+	</target>
+
+	<target name="coverage" depends="build" >
 		<junit fork="yes" printsummary="withOutAndErr" failureproperty="junit.failure">
 			<formatter type="xml" />
             <batchtest fork="yes" todir="${junit.output.dir}" >
@@ -165,16 +208,13 @@
                 <include name="**/Test*.class" />
               </fileset>
             </batchtest>
-			<jvmarg value="-Dcglib.debugLocation=&quot;${junit.output.dir}&quot;" />
 			<jvmarg value="-Demma.coverage.out.file=&quot;${coverage.dir}/coverage.emma&quot;" />
 			<jvmarg value="-Demma.coverage.out.merge=true" />
 			<classpath>
 				<pathelement path="${bin.instr.dir}"/>
 				<path refid="testclasspath"/>
 			</classpath>	
-				
 		</junit>
-	
 	    <available file="${coverage.dir}/coverage.emma" property="coverage-exists" />
 	    <antcall target="create-coverage-report" />
 	</target>
@@ -192,8 +232,7 @@
 	
 	<target name="jar" depends="build,run-unit-tests,coverage">
 		<jar destfile="${bundle.jar}"
-			manifest="${basedir}/META-INF/MANIFEST.MF"
-			description="Create Bundle JAR" >
+			manifest="${basedir}/META-INF/MANIFEST.MF" >
 			<fileset dir="${bin.dir}">
 			</fileset>
 			<fileset dir="${basedir}">
@@ -206,7 +245,25 @@
 				<!-- add additional attributes -->
 				<attribute name="Implementation-Title" value="${bundle.name}" />
 				<attribute name="Implementation-Version" value="${bundle.version}.v${DSTAMP}${TSTAMP}" />
-				<attribute name="Implementation-Vendor" value="GSK" />
+			</manifest>
+		</jar>
+	</target>
+	
+	<target name="jar-instrumented" depends="build,run-unit-tests,coverage">
+		<jar destfile="${bundle-instrumented.jar}"
+			manifest="${basedir}/META-INF/MANIFEST.MF" >
+			<fileset dir="${bin.instr.dir}">
+			</fileset>
+			<fileset dir="${basedir}">
+				<include name="${lib.path}/*"/>
+				<include name="resource/*"/>
+				<include name="META-INF/**"/>
+				<include name="OSGI-INF/**"/>
+			</fileset>
+			<manifest>
+				<!-- add additional attributes -->
+				<attribute name="Implementation-Title" value="${bundle.name}-INSTRUMENTED" />
+				<attribute name="Implementation-Version" value="${bundle.version}.v${DSTAMP}${TSTAMP}" />
 			</manifest>
 		</jar>
 	</target>
@@ -225,18 +282,18 @@
 				
 				<attribute name="Implementation-Title" value="${bundle.name}" />
 				<attribute name="Implementation-Version" value="${bundle.version}.v${DSTAMP}${TSTAMP}" />
-				<attribute name="Implementation-Vendor" value="GSK" />
 			</manifest>
 		</jar>
 	</target>
 	
-	<target name="jars" depends="jar,jar-src" />
+	<target name="jars" depends="jar,jar-instrumented,jar-src" />
 	
 	<target name="dist" depends="clean,build,jars" />
 
 	<target name="repository-deploy" depends="dist">
 		<osgi-deploy repository="${buildrepository.dir}" bundle="${bundle.jar}"/>
 		<osgi-deploy repository="${buildrepository.dir}" bundle="${bundle-src.jar}"/>
+		<osgi-deploy repository="${buildrepository.instr.dir}" bundle="${bundle-instrumented.jar}"/>
 	</target>
 	
 </project>
