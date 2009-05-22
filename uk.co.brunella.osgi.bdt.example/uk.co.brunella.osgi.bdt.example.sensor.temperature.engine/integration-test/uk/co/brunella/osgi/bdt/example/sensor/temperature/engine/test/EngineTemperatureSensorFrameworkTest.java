@@ -2,6 +2,7 @@ package uk.co.brunella.osgi.bdt.example.sensor.temperature.engine.test;
 
 import static org.junit.Assert.*;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
@@ -19,17 +20,23 @@ import uk.co.brunella.osgi.bdt.junit.runner.OSGiBDTJUnitRunner;
 
 @RunWith(OSGiBDTJUnitRunner.class)
 @OSGiBDTTest(
-    repositories = "../build/repository",
+    repositories = { "../build/repository", "../build/repository-instrumented" },
     manifest = "integration-test/META-INF/MANIFEST.MF",
     framework = Framework.EQUINOX,
-    buildIncludes = { @Include(source = "bin-test", dest = "") },
+    buildIncludes = { @Include(source = "bin-integration-test", dest = "") },
     frameworkStartPolicy = StartPolicy.ONCE_PER_TEST,
     requiredBundles = { 
         "uk.co.brunella.osgi.bdt.example.sensor.temperature", 
         "uk.co.brunella.osgi.bdt.example.sensor.temperature.engine" }
 )
-public class EngineTemperatureSensorTest {
+public class EngineTemperatureSensorFrameworkTest {
 
+  @Before
+  public void setup() {
+    System.setProperty("emma.coverage.out.file", "./coverage/coverage.emma");
+    System.setProperty("emma.coverage.out.merge", "true");
+  }
+  
   @OSGiBundleContext
   private BundleContext context;
   
