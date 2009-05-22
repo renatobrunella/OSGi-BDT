@@ -70,7 +70,7 @@
 	</target>
 	
 	<target name="junit-report">
-		<delete dir="${reports.junit.dir}" />
+		<delete dir="${reports.junit.dir}" failonerror="false" />
 		<mkdir dir="${reports.junit.dir}" />
 		
 		<junitreport todir="${reports.junit.dir}">
