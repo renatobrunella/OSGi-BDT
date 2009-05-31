@@ -20,6 +20,7 @@ package uk.co.brunella.osgi.bdt.osgitestrunner;
 
 import java.util.Map;
 
+@Deprecated
 public interface OSGiTestParameter {
 
   void setParameters(Map<String, String> parameters);

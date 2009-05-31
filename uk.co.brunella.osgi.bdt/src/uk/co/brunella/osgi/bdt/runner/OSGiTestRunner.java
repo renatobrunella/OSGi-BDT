@@ -52,6 +52,7 @@ import uk.co.brunella.osgi.bdt.repository.Deployer;
 import uk.co.brunella.osgi.bdt.runner.result.OSGiTestResult;
 import uk.co.brunella.osgi.bdt.runner.result.OSGiTestResultService;
 
+@Deprecated
 public class OSGiTestRunner {
 
   private static final OSGiBundleDescriptor TEST_RUNNER_BUNDLE = new OSGiBundleDescriptor(

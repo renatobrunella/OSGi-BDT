@@ -18,6 +18,7 @@
  */
 package uk.co.brunella.osgi.bdt.osgitestrunner;
 
+@Deprecated
 public interface OSGiTestCase {
 
 }
