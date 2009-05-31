@@ -2,7 +2,7 @@
 <project name="--- full build ---" basedir="." default="build-with-bootstrap">
 	
 	<!-- OSGi Ant taskdefs -->
-	<property name="bdt.jar" value="${basedir}/uk.co.brunella.osgi.bdt-2.2.0.jar" />
+	<property name="bdt.jar" value="${basedir}/uk.co.brunella.osgi.bdt-2.2.1.jar" />
 	<taskdef name="osgi-build" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiBuild" classpath="${bdt.jar}" />
 	<taskdef name="osgi-create" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiCreate" classpath="${bdt.jar}" />
 	<taskdef name="osgi-deploy" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiDeploy" classpath="${bdt.jar}" />
