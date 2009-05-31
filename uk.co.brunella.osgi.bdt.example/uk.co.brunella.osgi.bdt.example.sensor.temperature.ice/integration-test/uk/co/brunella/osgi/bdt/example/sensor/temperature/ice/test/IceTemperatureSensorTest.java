@@ -27,7 +27,10 @@ import uk.co.brunella.osgi.bdt.junit.runner.OSGiBDTJUnitRunner;
     frameworkStartPolicy = StartPolicy.ONCE_PER_TEST,
     requiredBundles = { 
         "uk.co.brunella.osgi.bdt.example.sensor.temperature", 
-        "uk.co.brunella.osgi.bdt.example.sensor.temperature.ice" }
+        "uk.co.brunella.osgi.bdt.example.sensor.temperature.ice" },
+    arguments = { 
+        "-Demma.coverage.out.file=./coverage/coverage.emma",
+        "-Demma.coverage.out.merge=true" }
 )
 public class IceTemperatureSensorTest {
 
