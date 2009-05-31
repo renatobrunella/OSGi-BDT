@@ -1,8 +1,10 @@
 package uk.co.brunella.osgi.bdt.example.sensor.temperature.engine.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
@@ -27,16 +29,13 @@ import uk.co.brunella.osgi.bdt.junit.runner.OSGiBDTJUnitRunner;
     frameworkStartPolicy = StartPolicy.ONCE_PER_TEST,
     requiredBundles = { 
         "uk.co.brunella.osgi.bdt.example.sensor.temperature", 
-        "uk.co.brunella.osgi.bdt.example.sensor.temperature.engine" }
+        "uk.co.brunella.osgi.bdt.example.sensor.temperature.engine" },
+    arguments = { 
+        "-Demma.coverage.out.file=./coverage/coverage.emma",
+        "-Demma.coverage.out.merge=true" }
 )
 public class EngineTemperatureSensorFrameworkTest {
 
-  @Before
-  public void setup() {
-    System.setProperty("emma.coverage.out.file", "./coverage/coverage.emma");
-    System.setProperty("emma.coverage.out.merge", "true");
-  }
-  
   @OSGiBundleContext
   private BundleContext context;
   
