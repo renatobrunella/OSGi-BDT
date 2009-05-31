@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.List;
 import java.util.Map;
@@ -196,7 +197,11 @@ public class OSGiBDTJUnitRunner extends Runner {
       if ("".equals(systemBundleName)) {
         systemBundleName = frameworkStarter.systemBundleName();
       }
-      String[] frameworkParameters = frameworkStarter.defaultArguments();
+      List<String> arguments = new ArrayList<String>();
+      arguments.addAll(Arrays.asList(frameworkStarter.defaultArguments()));
+      arguments.addAll(Arrays.asList(testClassAnnotation.arguments()));
+      String[] frameworkParameters = arguments.toArray(new String[arguments.size()]);
+      
       frameworkStarter.startFramework(systemBundleName, frameworkParameters);
 
       frameworkStarter.installBundle(OSGI_BDT_RUNNER_BUNDLE_NAME).start();
