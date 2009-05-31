@@ -24,6 +24,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
 
+@Deprecated
 public class OSGiTestCaseUtils {
 
   private static final int WAIT_TIME = 250;

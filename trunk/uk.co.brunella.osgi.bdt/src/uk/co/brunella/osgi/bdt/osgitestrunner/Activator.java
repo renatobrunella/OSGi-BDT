@@ -57,6 +57,7 @@ public class Activator implements BundleActivator, ServiceListener, OSGiTestResu
     return instance;
   }
   
+  @SuppressWarnings("deprecation")
   public void start(BundleContext context) throws Exception {
     testResults.clear();
     bundleContext = context;
@@ -92,6 +93,7 @@ public class Activator implements BundleActivator, ServiceListener, OSGiTestResu
     }
   }
   
+  @SuppressWarnings("deprecation")
   public void serviceChanged(ServiceEvent event) {
     ServiceReference serviceReference = event.getServiceReference();
     switch (event.getType()) {
@@ -105,6 +107,7 @@ public class Activator implements BundleActivator, ServiceListener, OSGiTestResu
     }
   }
 
+  @SuppressWarnings("deprecation")
   protected void runTests(OSGiTestCase testService) {
     // set test parameters
     if (testParameters != null && testService instanceof OSGiTestParameter) {
@@ -152,6 +155,7 @@ public class Activator implements BundleActivator, ServiceListener, OSGiTestResu
     }
   }
 
+  @SuppressWarnings("deprecation")
   protected void runTest(OSGiTestCase testService, Method method) {
     OSGiTestResult testResult;
     String description = "";
