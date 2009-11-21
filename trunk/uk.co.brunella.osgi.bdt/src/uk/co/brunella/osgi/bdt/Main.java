@@ -181,14 +181,15 @@ public class Main {
   }
 
   private static void printHelp() {
-    System.out.println("OSGiBDT:");
+    System.out.println("OSGi BDT:");
     System.out.println("\t-help");
     System.out.println("\t-create repository profilename");
+    System.out.println("\t-listprofiles");
     System.out.println("\t-deploy bundle repository");
     System.out.println("\t-undeploy bundlename bundleversion repository");
     System.out.println("\t-list repository");
-    System.out.println("\t-listprofiles");
     System.out.println("\t-resolve packagename versionrange repository");
+//    System.out.println("\t-bundle bundlename bundleversionrange repository");
   }
 
 }
