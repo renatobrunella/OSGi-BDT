@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project name="--- full build ---" basedir="." default="build-with-bootstrap">
+	
+	<!-- OSGi Ant taskdefs -->
+	<property name="bdt.jar" value="${basedir}/uk.co.brunella.osgi.bdt-2.2.1.jar" />
+	<taskdef name="osgi-build" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiBuild" classpath="${bdt.jar}" />
+	<taskdef name="osgi-create" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiCreate" classpath="${bdt.jar}" />
+	<taskdef name="osgi-deploy" classname="uk.co.brunella.osgi.bdt.ant.tasks.OSGiDeploy" classpath="${bdt.jar}" />
+	
+	<property name="repository.dir" value="${basedir}/repository" />
+	<property name="repository.instrumented.dir" value="${basedir}/repository-instrumented" />
+	
+	<property name="reports.dir" value="${basedir}/reports" />
+	<property name="reports.junit.dir" value="${reports.dir}/junit" />
+	<property name="reports.coverage.dir" value="${reports.dir}/coverage" />
+	<property name="bundle.dist.dir" value="${basedir}/dist" />
+
+	<target name="clean-all">
+		<osgi-build manifestfile="./META-INF/MANIFEST.MF" buildfile="build.xml" buildtarget="clean"
+			repository="${repository.dir}" fullrebuild="true" >
+			<dirset dir="${basedir}/..">
+				<include name="*"/>
+				<exclude name="build" />
+			</dirset>
+		</osgi-build>
+		<delete dir="${bundle.dist.dir}" />
+	</target>
+	
+	<target name="bundle-build">
+		<osgi-build manifestfile="./META-INF/MANIFEST.MF" buildfile="build.xml" buildtarget="repository-deploy"
+			inheritdirty="false" verbose="true" repository="${repository.dir}" fullrebuild="${fullrebuild}" dirtythreshold="3000">
+			<dirset dir="${basedir}/..">
+				<include name="*"/>
+				<exclude name="build" />
+			</dirset>
+		</osgi-build>
+		<delete dir="${bundle.dist.dir}" />
+		<mkdir dir="${bundle.dist.dir}" />
+		<copy todir="${bundle.dist.dir}" flatten="true">
+			<fileset dir="${basedir}/..">
+				<include name="*/dist/*"/>
+				<exclude name="build/**" />
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="integration-tests">
+		<osgi-build manifestfile="./META-INF/MANIFEST.MF" 
+				buildfile="build.xml" 
+				buildtarget="run-integration-tests"
+				repository="${repository.dir}" 
+				fullrebuild="true">
+			<dirset dir="${basedir}/..">
+				<include name="*"/>
+				<exclude name="build" />
+			</dirset>
+		</osgi-build>
+		<antcall target="junit-report" />
+	</target>
+
+	<target name="build-fullrebuild">
+		<property name="fullrebuild" value="true" />
+		<antcall target="bundle-build" />
+		<antcall target="integration-tests" />
+	</target>
+	
+	<target name="build">
+		<property name="fullrebuild" value="false" />
+		<antcall target="bundle-build" />
+	</target>
+	
+	<target name="junit-report">
+		<delete dir="${reports.junit.dir}" failonerror="false" />
+		<mkdir dir="${reports.junit.dir}" />
+		
+		<junitreport todir="${reports.junit.dir}">
+			<fileset dir="${basedir}/..">
+				<include name="*/junit/TEST-*.xml" />
+			</fileset>
+			<report format="frames" todir="${reports.junit.dir}" />
+		</junitreport>
+	</target>	
+
+	<target name="coverage-report">
+		<delete dir="${reports.coverage.dir}" />
+		<mkdir dir="${reports.coverage.dir}" />
+
+		<path id="emma.classpath">
+			<pathelement location="${basedir}/emma.jar" />
+			<pathelement location="${basedir}/emma_ant.jar" />
+		</path>
+		<taskdef resource="emma_ant.properties" classpathref="emma.classpath" />
+
+		<path id="all.source">
+			<dirset dir="${basedir}/..">
+				<include name="*/src"/>
+			</dirset>
+		</path>
+
+		<emma>
+			<merge outfile="${reports.coverage.dir}/allcoverage.emma">
+				<fileset dir="${basedir}/.." 
+					includes="*/coverage/*.emma" />
+			</merge>
+
+		    <report sourcepathref="all.source" >
+		    	<fileset dir="${reports.coverage.dir}">
+		    		<include name="allcoverage.emma"/>
+		    	</fileset>	
+		    	<html outfile="${reports.coverage.dir}/coverage.html" />
+		    	<xml outfile="${reports.coverage.dir}/coverage.xml" />
+		    </report>	
+		</emma>
+	</target>
+	
+	<target name="build-with-reports" depends="build-fullrebuild,integration-tests,junit-report,coverage-report" />
+
+	<target name="bootstrap">
+		<delete dir="${repository.dir}" />
+		<mkdir dir="${repository.dir}"/>
+		<osgi-create repository="${repository.dir}" profilename="J2SE-1.5" />
+		<osgi-deploy repository="${repository.dir}">
+			<fileset dir="${basedir}/bundles">
+				<include name="*.jar" />
+			</fileset>
+		</osgi-deploy>
+		<delete dir="${repository.instrumented.dir}" />
+		<mkdir dir="${repository.instrumented.dir}"/>
+		<osgi-create repository="${repository.instrumented.dir}" profilename="J2SE-1.5" />
+		<osgi-deploy repository="${repository.instrumented.dir}">
+			<fileset dir="${basedir}/bundles">
+				<include name="*.jar" />
+			</fileset>
+		</osgi-deploy>
+	</target>
+	
+	<target name="build-with-bootstrap">
+		<antcall target="bootstrap" />
+		<antcall target="build-with-reports" />
+	</target>
+	
+</project>

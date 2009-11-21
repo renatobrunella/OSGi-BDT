@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Ant-Version: Apache Ant 1.6.1
+Created-By: JDK_1.4
+Main-Class: emmarun
+Specification-Title: emma
+Specification-Vendor: (C) Vladimir Roubtsov
+Implementation-Vendor: vlad on Windows NT:4.0:x86
+Specification-Version: 2.0
+Implementation-Version: 2.0.5312 (2005/06/12 19:32:43)
+
