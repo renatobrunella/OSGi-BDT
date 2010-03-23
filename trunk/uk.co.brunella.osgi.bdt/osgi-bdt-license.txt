@@ -1,6 +1,6 @@
 OSGi BDT - Build Deploy Test
 
-Copyright © 2008 brunella ltd, Renato Brunella.
+Copyright © 2008 - 2010 brunella ltd, Renato Brunella.
 All Rights Reserved. 
 
 This software is distributed under the GNU GENERAL PUBLIC LICENSE Version 3.0
