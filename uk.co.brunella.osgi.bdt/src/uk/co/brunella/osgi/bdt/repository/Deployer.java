@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 brunella ltd
+ * Copyright 2008 - 2010 brunella ltd
  *
  * Licensed under the GPL Version 3 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,6 +70,13 @@ public class Deployer {
   public boolean deploy(File sourceBundleFile) throws IOException {
     logClear();
     log("Deploying bundle " + sourceBundleFile);
+
+    // undeploy existing bundle
+    JarFile originalJarFile = new JarFile(sourceBundleFile);
+    BundleDescriptor originalDescriptor = new BundleDescriptor(originalJarFile.getName(), originalJarFile.getManifest());
+    originalJarFile.close();
+    undeploy(originalDescriptor.getBundleSymbolicName(), originalDescriptor.getBundleVersion(), false);
+    
     // try to lock the repository
     if (persister.lock(MAX_WAIT_TIME_IN_MILLIS)) {
       try {
@@ -102,15 +109,17 @@ public class Deployer {
     }
   }
 
-  public boolean undeploy(String bundleSymbolicName, Version bundleVersion) throws IOException {
+  public boolean undeploy(String bundleSymbolicName, Version bundleVersion, boolean log) throws IOException {
     VersionRange bundleVersionRange = VersionRange.parseVersionRange(
         "[" + bundleVersion + "," + bundleVersion + "]");
-    return undeploy(bundleSymbolicName, bundleVersionRange);
+    return undeploy(bundleSymbolicName, bundleVersionRange, log);
   }
 
-  public boolean undeploy(String bundleSymbolicName, VersionRange bundleVersionRange) throws IOException {
-    logClear();
-    log("Undeploying bundle " + bundleSymbolicName + " " + bundleVersionRange);
+  public boolean undeploy(String bundleSymbolicName, VersionRange bundleVersionRange, boolean log) throws IOException {
+    if (log) {
+      logClear();
+      log("Undeploying bundle " + bundleSymbolicName + " " + bundleVersionRange);
+    }
     // try to lock the repository
     if (persister.lock(MAX_WAIT_TIME_IN_MILLIS)) {
       try {
@@ -127,7 +136,7 @@ public class Deployer {
           if (children == null || children.length == 0) {
             FileUtils.deleteDir(packageDir.getParentFile());
           }
-        } else {
+        } else if( log) {
           logError("No bundle found");
         }
       } finally {

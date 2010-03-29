@@ -118,7 +118,7 @@ public class Main {
     }
     Deployer deployer = new Deployer(repositoryDirectory);
     Version version = Version.parseVersion(bundleVersion);
-    deployer.undeploy(bundleSymbolicName, version);
+    deployer.undeploy(bundleSymbolicName, version, true);
     System.out.println("Undeployed bundle " + bundleSymbolicName + " version " + version.toString() + 
         " from repository " + repositoryDirectory);
     return true;
