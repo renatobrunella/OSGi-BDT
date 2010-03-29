@@ -51,10 +51,10 @@ public class OSGiUndeploy extends AbstractOSGiTask {
     try {
       if (version.length() > 0) {
         Version bundleVersion = Version.parseVersion(version);
-        deployer.undeploy(bundleName, bundleVersion);
+        deployer.undeploy(bundleName, bundleVersion, true);
       } else {
         VersionRange bundleVersionRange = VersionRange.parseVersionRange(range);
-        deployer.undeploy(bundleName, bundleVersionRange);
+        deployer.undeploy(bundleName, bundleVersionRange, true);
       }
       log(deployer.getLogMessages());
     } catch (IOException e) {

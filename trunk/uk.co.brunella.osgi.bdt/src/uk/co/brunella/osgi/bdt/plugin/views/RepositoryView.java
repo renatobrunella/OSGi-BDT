@@ -720,7 +720,7 @@ public class RepositoryView extends ViewPart {
     public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
       Deployer deployer = new Deployer(repositoryDirectory);
       try {
-        deployer.undeploy(bundleSymbolicName, bundleVersion);
+        deployer.undeploy(bundleSymbolicName, bundleVersion, false);
         contentProvider.refresh();
       } catch (IOException e) {
         throw new InvocationTargetException(e);
