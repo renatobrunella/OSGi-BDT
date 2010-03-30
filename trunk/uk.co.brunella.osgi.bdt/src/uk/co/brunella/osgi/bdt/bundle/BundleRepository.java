@@ -211,6 +211,9 @@ public class BundleRepository implements Serializable {
     return dependencies;
   }
 
+  public Properties getProfile() {
+    return profiles.get(profileName);
+  }
   
   private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
     ois.defaultReadObject();

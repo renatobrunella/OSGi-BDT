@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 brunella ltd
+ * Copyright 2009 - 2010 brunella ltd
  *
  * Licensed under the GPL Version 3 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 package uk.co.brunella.osgi.bdt.junit.runner;
 
 import static org.osgi.framework.Constants.FRAGMENT_HOST;
+import static org.osgi.framework.Constants.IMPORT_PACKAGE;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -31,8 +32,11 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
@@ -191,7 +195,7 @@ public class OSGiBDTJUnitRunner extends Runner {
     return starters;
   }
   
-  private void startFramework(OSGiFrameworkStarter frameworkStarter) {
+  private void startFramework(OSGiFrameworkStarter frameworkStarter, BundleRepository repository) {
     try {
       String systemBundleName = testClassAnnotation.systemBundle();
       if ("".equals(systemBundleName)) {
@@ -201,6 +205,9 @@ public class OSGiBDTJUnitRunner extends Runner {
       arguments.addAll(Arrays.asList(frameworkStarter.defaultArguments()));
       arguments.addAll(Arrays.asList(testClassAnnotation.arguments()));
       String[] frameworkParameters = arguments.toArray(new String[arguments.size()]);
+      if (emmaOnClassPath) {
+        frameworkParameters = addEmmaPackageToSystemPackages(frameworkParameters, (String) repository.getProfile().get("org.osgi.framework.system.packages"));
+      }
       
       frameworkStarter.startFramework(systemBundleName, frameworkParameters);
 
@@ -241,6 +248,20 @@ public class OSGiBDTJUnitRunner extends Runner {
     } catch (ClassNotFoundException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private String[] addEmmaPackageToSystemPackages(String[] parameters, String systemPackages) {
+    for (int i = 0; i < parameters.length; i++) {
+      if (parameters[i].startsWith("-Dorg.osgi.framework.system.packages=")) {
+        parameters[i] = parameters[i] + "," + EMMA_PACKAGE;
+        return parameters;
+      }
+    }
+    String[] newParameters = new String[parameters.length + 1];
+    System.arraycopy(parameters, 0, newParameters, 0, parameters.length);
+    newParameters[newParameters.length - 1] = 
+      "-Dorg.osgi.framework.system.packages=" + systemPackages + "," + EMMA_PACKAGE;
+    return newParameters;
   }
 
   private String getFragmentHost(Bundle bundle) {
@@ -293,17 +314,19 @@ public class OSGiBDTJUnitRunner extends Runner {
 
   private void runTests(RunNotifier notifier, List<FrameworkMethod> testMethods) {
     int index = 0;
-    for (OSGiFrameworkStarter frameworkStarter : frameworkStarters) {
+    for (int i = 0; i < frameworkStarters.length; i++) {
+      OSGiFrameworkStarter frameworkStarter = frameworkStarters[i];
+      BundleRepository repository = repositories[i];
       if (frameworkStarters.length > 1) {
         index++;
       }
       if (testClassAnnotation.frameworkStartPolicy() == StartPolicy.ONCE_PER_TEST_CLASS) {
-        startFramework(frameworkStarter);
+        startFramework(frameworkStarter, repository);
         runBeforeClass(notifier);
       }
       for (FrameworkMethod testMethod : testMethods) {
         if (testClassAnnotation.frameworkStartPolicy() == StartPolicy.ONCE_PER_TEST) {
-          startFramework(frameworkStarter);
+          startFramework(frameworkStarter, repository);
         }
   
         runTest(notifier, testMethod, index);
@@ -471,6 +494,7 @@ public class OSGiBDTJUnitRunner extends Runner {
   
   private File createJar(BundleRepository[] repositories, OSGiBDTTestWrapper annotation) throws InitializationError {
     Manifest manifest = readManifest(annotation);
+    addRequiredImports(manifest);
     File tempDirectory = new File(repositories[0].getLocation(), Deployer.TEMP_DIRECTORY);
     File testBundleFile = new File(tempDirectory, "testjar.jar");
     try {
@@ -497,6 +521,66 @@ public class OSGiBDTJUnitRunner extends Runner {
       list.add(e);
       throw new InitializationError(list);
     }
+  }
+  
+  private void addRequiredImports(Manifest manifest) {
+    Attributes attributes = manifest.getMainAttributes();
+    String imports = attributes.getValue(IMPORT_PACKAGE);
+    if (imports == null) {
+      Set<String> emptySet = new HashSet<String>(0);
+      imports = addRequiredPackages(emptySet).substring(1) + addOptionalPackages(emptySet) ;
+    } else {
+      String[] importPackages = imports.split(",");
+      Set<String> packageSet = new HashSet<String>(importPackages.length);
+      for (int i = 0; i < importPackages.length; i++) {
+        int index = importPackages[i].indexOf(';');
+        if (index > 0) {
+          importPackages[i] = importPackages[i].substring(0, index);
+        }
+        packageSet.add(importPackages[i]);
+      }
+      imports = imports + addRequiredPackages(packageSet) + addOptionalPackages(packageSet);
+    }
+    attributes.putValue(IMPORT_PACKAGE, imports);
+  }
+
+  private static String[] REQUIRED_PACKAGES = new String[] {
+    "uk.co.brunella.osgi.bdt.junit.annotation",
+    "uk.co.brunella.osgi.bdt.junit.runner",
+    "org.junit",
+    "org.junit.runner"
+  };
+
+  private String addRequiredPackages(Set<String> importedPackages) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < REQUIRED_PACKAGES.length; i++) {
+      if (!importedPackages.contains(REQUIRED_PACKAGES[i])) {
+        sb.append(',');
+        sb.append(REQUIRED_PACKAGES[i]);
+      }
+    }
+    return sb.toString();
+  }
+  
+  private static final String EMMA_PACKAGE = "com.vladium.emma.rt";
+  private static final String EMMA_RT_CLASS = "com.vladium.emma.rt.RT";
+  
+  private boolean emmaOnClassPath;
+  
+  private String addOptionalPackages(Set<String> importedPackages) {
+    StringBuilder sb = new StringBuilder();
+    
+    // Emma support
+    try {
+      Class.forName(EMMA_RT_CLASS);
+      sb.append(',');
+      sb.append(EMMA_PACKAGE);
+      emmaOnClassPath = true;
+    } catch (ClassNotFoundException e) {
+      emmaOnClassPath = false;
+    }
+
+    return sb.toString();
   }
 
   private Manifest readManifest(OSGiBDTTestWrapper annotation) throws InitializationError {
