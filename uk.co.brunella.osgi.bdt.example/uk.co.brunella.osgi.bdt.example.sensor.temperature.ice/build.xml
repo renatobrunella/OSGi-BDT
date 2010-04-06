@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project name="uk.co.brunella.osgi.bdt.example.sensor.temperature.ice" basedir="." default="repository-deploy">
-
-	<import file="../build/generic-bundle-build.xml" />
-	
-</project>
