@@ -126,7 +126,7 @@ public class OSGiBDTJUnitRunner extends Runner {
   private final BundleRepository[] repositories;
   private final OSGiFrameworkStarter[] frameworkStarters;
   private final File testBundleFile;
-  private final Map<String, String> parameters;
+  private final Map<String, Object> parameters;
   private TestClass osgiTestClass;
   private Bundle osgiTestBundle;
 
@@ -135,7 +135,7 @@ public class OSGiBDTJUnitRunner extends Runner {
   }
 
   public OSGiBDTJUnitRunner(Class<?> testClass, OSGiBDTTestWrapper testClassAnnotation, File testBundleFile, 
-      Map<String, String> parameters) throws InitializationError {
+      Map<String, Object> parameters) throws InitializationError {
     if (testClassAnnotation == null) {
       throw new InitializationError("OSGiBDTTest annotation is missing");
     }

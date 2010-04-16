@@ -23,18 +23,18 @@ import java.util.Map;
 
 import org.osgi.framework.Bundle;
 
-import uk.co.brunella.osgi.bdt.framework.BundleContextWrapper;
 import uk.co.brunella.osgi.bdt.junit.runner.model.FrameworkMethod;
 
 public class InjectParametersStatement extends Statement {
 
+  @SuppressWarnings("unused")
   private final Bundle fTestBundle;
   private final Statement fNext;
   private final Object fTarget;
   private final List<FrameworkMethod> fMethods;
-  private final Map<String, String> fParameters;
+  private final Map<String, Object> fParameters;
 
-  public InjectParametersStatement(Bundle testBundle, Statement next, List<FrameworkMethod> methods, Object target, Map<String, String> parameters) {
+  public InjectParametersStatement(Bundle testBundle, Statement next, List<FrameworkMethod> methods, Object target, Map<String, Object> parameters) {
     fTestBundle = testBundle;
     fNext = next;
     fMethods = methods;
@@ -45,10 +45,6 @@ public class InjectParametersStatement extends Statement {
   @Override
   public void evaluate() throws Throwable {
     if (fMethods.size() > 0) {
-      Object bundleContext = fTestBundle.getBundleContext();
-      if (bundleContext instanceof BundleContextWrapper) {
-        bundleContext = ((BundleContextWrapper) bundleContext).unwrap();
-      }
       for (FrameworkMethod method : fMethods) {
         method.invokeExplosively(fTarget, fParameters);
       }

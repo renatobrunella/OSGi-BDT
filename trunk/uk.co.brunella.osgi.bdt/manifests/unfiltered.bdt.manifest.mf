@@ -7,8 +7,11 @@ Bundle-Vendor: brunella ltd
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .
-Import-Package: org.osgi.framework;version="1.4.0"
-Export-Package: org.osgi.framework;version="1.4.0", 
+Import-Package: org.osgi.framework;version="1.5"
+Export-Package: org.osgi.framework;version="1.5",
+ org.osgi.framework.hooks.service;version="1.5",
+ org.osgi.framework.hooks.service;version="1.0",
+ org.osgi.framework.launch;version="1.0",
  junit.extensions;version="@junit.version@";uses:="junit.framework",
  junit.framework;version="@junit.version@";uses:="org.junit.runner.manipulation,org.junit.runner,org.junit.runner.notification",
  junit.runner;version="@junit.version@";uses:="junit.framework",
@@ -36,6 +39,7 @@ Export-Package: org.osgi.framework;version="1.4.0",
  org.junit.runners;version="@junit.version@";uses:="org.junit.runner.manipulation,org.junit.runner,org.junit.internal.runners,org.junit.runners.model,org.junit.runner.notification",
  org.junit.runners.model;version="@junit.version@";uses:="org.junit.runner",
  uk.co.brunella.osgi.bdt.junit.annotation;version="@bundle.version@",
- uk.co.brunella.osgi.bdt.junit.runner;version="@bundle.version@";uses:="org.junit.runner,org.junit.runner.notification,uk.co.brunella.osgi.bdt.junit.runner.model"
+ uk.co.brunella.osgi.bdt.junit.runner;version="@bundle.version@";uses:="org.junit.runner,org.junit.runner.notification,uk.co.brunella.osgi.bdt.junit.runner.model",
+ uk.co.brunella.osgi.bdt.fit;version="@bundle.version@"
 Main-Class: uk.co.brunella.osgi.bdt.Main
 
