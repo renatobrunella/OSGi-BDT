@@ -42,6 +42,9 @@ public class FrameworkMethod {
     return new ReflectiveCallable() {
       @Override
       protected Object runReflectiveCall() throws Throwable {
+        if (!Modifier.isPublic(fMethod.getModifiers())) {
+          fMethod.setAccessible(true);
+        }
         return fMethod.invoke(target, params);
       }
     }.run();

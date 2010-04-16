@@ -25,10 +25,12 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.Map;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Version;
 
 public class BundleWrapper implements Bundle {
 
@@ -154,6 +156,25 @@ public class BundleWrapper implements Bundle {
     invoke("update", parameterTypes(InputStream.class), in);
   }
   
+  @SuppressWarnings("unchecked")
+  public Map/* <X509Certificate, List<X509Certificate>> */getSignerCertificates(int signersType) {
+    try {
+      return (Map) invoke("getSignerCertificates", parameterTypes(int.class), signersType);
+    } catch (BundleException e) {
+      // method does not throw exception
+      throw new RuntimeException(e);
+    }
+  }
+  
+  public Version getVersion() {
+    try {
+      return (Version) invoke("getVersion", parameterTypes(InputStream.class));
+    } catch (BundleException e) {
+      // method does not throw exception
+      throw new RuntimeException(e);
+    }
+  }
+  
   
   private Object invoke(String methodName, Class<?>[] parameterTypes, Object... arguments) throws BundleException {
     try {
@@ -162,7 +183,12 @@ public class BundleWrapper implements Bundle {
       return method.invoke(bundle, arguments);
     } catch (Exception e) {
       if (e instanceof InvocationTargetException) {
-        throw (BundleException) ((InvocationTargetException) e).getTargetException();
+        Throwable t = ((InvocationTargetException) e).getTargetException();
+        if (t instanceof BundleException) {
+          throw (BundleException) t;
+        } else {
+          throw new RuntimeException(t);
+        }
       } else {
         return null;
       }

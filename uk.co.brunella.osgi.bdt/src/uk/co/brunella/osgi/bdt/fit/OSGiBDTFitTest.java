@@ -49,7 +49,7 @@ public class OSGiBDTFitTest extends Fixture {
   private String systemBundle;
   private List<String> requiredBundles = new ArrayList<String>();
   private String testBundle;
-  private Map<String, String> parameters = new HashMap<String, String>();
+  private Map<String, Object> parameters = new HashMap<String, Object>();
   private BundleRepository repository;
 
   public OSGiBDTFitTest() {
