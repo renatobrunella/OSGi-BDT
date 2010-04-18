@@ -35,6 +35,7 @@ Export-Package: junit.extensions;version="@junit.version@";uses:="junit.framewor
  org.junit.runners;version="@junit.version@";uses:="org.junit.runner.manipulation,org.junit.runner,org.junit.internal.runners,org.junit.runners.model,org.junit.runner.notification",
  org.junit.runners.model;version="@junit.version@";uses:="org.junit.runner",
  uk.co.brunella.osgi.bdt.junit.annotation;version="@bundle.version@",
- uk.co.brunella.osgi.bdt.junit.runner;version="@bundle.version@";uses:="org.junit.runner,org.junit.runner.notification,uk.co.brunella.osgi.bdt.junit.runner.model"
+ uk.co.brunella.osgi.bdt.junit.runner;version="@bundle.version@";uses:="org.junit.runner,org.junit.runner.notification,uk.co.brunella.osgi.bdt.junit.runner.model",
+ uk.co.brunella.osgi.bdt.fit;version="@bundle.version@"
 Main-Class: uk.co.brunella.osgi.bdt.Main
 
