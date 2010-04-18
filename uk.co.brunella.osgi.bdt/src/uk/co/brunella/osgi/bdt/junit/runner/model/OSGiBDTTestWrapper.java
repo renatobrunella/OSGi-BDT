@@ -48,6 +48,22 @@ public class OSGiBDTTestWrapper {
     arguments = annotation.arguments();
   }
   
+  public OSGiBDTTestWrapper(OSGiBDTTest annotation, String[] repositories) {
+    baseDir = annotation.baseDir();
+    manifest = annotation.manifest();
+    framework = annotation.framework();
+    frameworkStartPolicy = annotation.frameworkStartPolicy();
+    if (repositories == null) {
+      this.repositories = annotation.repositories();
+    } else {
+      this.repositories = repositories;
+    }
+    buildIncludes = annotation.buildIncludes();
+    systemBundle = annotation.systemBundle();
+    requiredBundles = annotation.requiredBundles();
+    arguments = annotation.arguments();
+  }
+  
   public OSGiBDTTestWrapper(String baseDir, String manifest, Framework framework, StartPolicy frameworkStartPolicy,
       String[] repositories, Include[] buildIncludes, String systemBundle, String[] requiredBundles, String[] arguments) {
     this.baseDir = baseDir;
