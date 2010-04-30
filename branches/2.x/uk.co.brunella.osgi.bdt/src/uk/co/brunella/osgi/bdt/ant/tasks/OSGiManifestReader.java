@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 brunella ltd
+ * Copyright 2008 - 2010 brunella ltd
  *
  * Licensed under the GPL Version 3 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,57 +21,104 @@ package uk.co.brunella.osgi.bdt.ant.tasks;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Map.Entry;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
 import org.apache.tools.ant.BuildException;
-
-import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor;
+import org.osgi.framework.Constants;
 
 public class OSGiManifestReader extends AbstractOSGiTask {
 
-  private BundleDescriptor descriptor;
-  private String bundleName = "bundle.name";
-  private String bundleVersionName = "bundle.version";
+  private Manifest manifest;
+  private String propertyBundleName = "bundle.name";
+  private String propertyBundleVersionName = "bundle.version";
+  private String propertyPrefix = null;
+  private boolean verbose = false;
+  
 
   public OSGiManifestReader() {
     setTaskName("osgi-manifest");
-    setDescription("Sets properties with bundle symbolic name and version");
+    setDescription("Sets properties with bundle symbolic name and version and read main manifest section");
   }
 
   public void setBundleName(String bundleName) {
-    this.bundleName = bundleName;
+    this.propertyBundleName = bundleName;
   }
 
   public void setBundleVersionName(String bundleVersionName) {
-    this.bundleVersionName = bundleVersionName;
+    this.propertyBundleVersionName = bundleVersionName;
+  }
+  
+  public void setPropertyPrefix(String propertyPrefix) {
+    this.propertyPrefix = propertyPrefix;
+  }
+  
+  public void setVerbose(boolean verbose) {
+    this.verbose = verbose;
+  }
+
+  public void setBundle(File bundleJarFile) {
+    JarFile jarFile = null;
+    try {
+      jarFile = new JarFile(bundleJarFile);
+      manifest = jarFile.getManifest();
+    } catch (IOException e) {
+      throw new BuildException(e.getMessage(), e);
+    } finally {
+      if (jarFile != null) {
+        try {
+          jarFile.close();
+        } catch (IOException e) {
+          throw new BuildException(e.getMessage(), e);
+        }
+      }
+    }
   }
 
   public void setManifest(File manifestFile) {
     FileInputStream fis = null;
     try {
       fis = new FileInputStream(manifestFile);
-      Manifest manifest = new Manifest(fis);
-      descriptor = new BundleDescriptor("", manifest);
+      manifest = new Manifest(fis);
     } catch (IOException e) {
-      e.printStackTrace();
-      throw new BuildException(e.getMessage());
+      throw new BuildException(e.getMessage(), e);
     } finally {
       if (fis != null) {
         try {
           fis.close();
         } catch (IOException e) {
-          throw new BuildException(e.getMessage());
+          throw new BuildException(e.getMessage(), e);
         }
       }
     }
   }
   
   public void execute() {
-    String name = descriptor.getBundleSymbolicName();
-    log("Setting bundle name: " + bundleName + "=" + name);
-    getProject().setNewProperty(bundleName, name);
-    String version = descriptor.getBundleVersion().toString();
-    log("Setting bundle version: " + bundleVersionName + "=" + version);
-    getProject().setNewProperty(bundleVersionName, version);
+    Attributes attributes = manifest.getMainAttributes();
+    String bundleName = attributes.getValue(Constants.BUNDLE_SYMBOLICNAME);
+    if (bundleName.indexOf(';') != -1) {
+      bundleName = bundleName.substring(0, bundleName.indexOf(';'));
+    }
+    getProject().setNewProperty(propertyBundleName, bundleName);
+    String bundleVersion = attributes.getValue(Constants.BUNDLE_VERSION);
+    getProject().setNewProperty(propertyBundleVersionName, bundleVersion);
+    if (verbose) {
+      log("Setting " + propertyBundleName + "=" + bundleName);
+      log("Setting " + propertyBundleVersionName + "=" + bundleVersion);
+    }
+    
+    if (propertyPrefix != null) {
+      log("Setting manifest entries to properties with prefix " + propertyPrefix);
+      for (Entry<Object, Object> entry : attributes.entrySet()) {
+        String name = ((Attributes.Name) entry.getKey()).toString();
+        String value = (String) entry.getValue();
+        getProject().setNewProperty(propertyPrefix + name, value);
+        if (verbose) {
+          log("Setting " + propertyPrefix + name + "=" + value);
+        }
+      }
+    }
   }
 }
