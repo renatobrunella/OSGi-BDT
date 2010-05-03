@@ -2,7 +2,7 @@
 <project basedir="." default="dist" name="uk.co.brunella.osgi.bdt">
 	<tstamp />
 
-	<property name="version" value="2.2.3" />
+	<property name="version" value="2.2.4" />
 	<property name="junit.version" value="4.5.0" />
 
 	<property name="debuglevel" value="source,lines,vars" />
