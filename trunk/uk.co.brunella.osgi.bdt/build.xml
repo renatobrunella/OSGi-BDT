@@ -75,6 +75,13 @@
 			srcdir="${src.test.dir}">
 			<classpath refid="classpath" />
 		</javac>
+		<copy todir="${bin.dir}">
+			<fileset dir="${src.dir}">
+				<include name="profiles/*"/>
+			</fileset>
+		</copy>
+		<copy file="${src.dir}/uk/co/brunella/osgi/bdt/ant/antlib.xml" 
+			tofile="${bin.dir}/uk/co/brunella/osgi/bdt/ant/antlib.xml"/>
 	</target>
 	
 	<target name="junit" depends="build">
@@ -110,15 +117,6 @@
 	</target>
 	
 	<target name="jar" depends="build,filtermanifests">
-		<!-- uk.co.brunella.osgi.bdt -->
-		<copy file="${src.dir}/uk/co/brunella/osgi/bdt/ant/antlib.xml" 
-			tofile="${bin.dir}/uk/co/brunella/osgi/bdt/ant/antlib.xml"/>
-		<copy todir="${bin.dir}">
-			<fileset dir="${src.dir}">
-				<include name="profiles/*"/>
-			</fileset>
-		</copy>
-
 		<!-- uk.co.brunella.osgi.bdt -->
 		<jar destfile="${dist.dir}/uk.co.brunella.osgi.bdt-${version}.jar" 
 			manifest="${bin.dir}/filtered.bdt.manifest.mf" filesetmanifest="merge">
