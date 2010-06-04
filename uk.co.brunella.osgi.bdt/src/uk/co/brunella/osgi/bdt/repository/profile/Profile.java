@@ -18,6 +18,7 @@
  */
 package uk.co.brunella.osgi.bdt.repository.profile;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -26,11 +27,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
-
 public class Profile {
 
-  private final static String PROFILE_DIRECTORY = "profiles";
+  private final static String PROFILE_DIRECTORY = "profiles/";
   
   private static Map<String, Properties> profiles;
   
@@ -55,14 +54,16 @@ public class Profile {
   }
 
   private static Properties readProperties(String fileName) {
-    InputStream is = BundleRepository.class.getClassLoader().getResourceAsStream(PROFILE_DIRECTORY + "/" + fileName);
-    Properties properties = new Properties();
-    try {
-      properties.load(is);
-      return properties;
-    } catch (IOException e) {
-      return null;
+    InputStream is = Profile.class.getClassLoader().getResourceAsStream(PROFILE_DIRECTORY + fileName);
+    if (is != null) {
+      Properties properties = new Properties();
+      try {
+        properties.load(is);
+        return properties;
+      } catch (IOException e) {
+      }
     }
+    return null;
   }
 
   private static Map<String, Properties> getProfiles() {
