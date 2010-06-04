@@ -33,6 +33,16 @@
 		</fileset>
 	</path>
 
+	<path id="testclasspath">
+		<pathelement location="${bin.dir}" />
+		<pathelement location="${bin.test.dir}" />
+
+        <fileset dir="${build.lib.dir}">
+		  <include name="**/*.jar"/>
+		  <exclude name="**/ant.jar"/>
+		</fileset>
+	</path>
+
 	<target name="init">
 		<mkdir dir="${bin.dir}" />
 		<mkdir dir="${bin.test.dir}" />
@@ -76,7 +86,7 @@
 					<include name="**/Test*.class" />
 				</fileset>
 			</batchtest>
-			<classpath refid="classpath" />
+			<classpath refid="testclasspath" />
 		</junit>
 		<antcall target="junitreport" />
 		<fail if="junit.failure"/>
@@ -97,7 +107,6 @@
 		<copy file="${basedir}/manifests/unfiltered.bdt.manifest.mf" tofile="${bin.dir}/filtered.bdt.manifest.mf" filtering="true" />
 		<copy file="${basedir}/manifests/unfiltered.bdt.no-osgi-framework.manifest.mf" tofile="${bin.dir}/filtered.bdt.no-osgi-framework.manifest.mf" filtering="true" />
 		<copy file="${basedir}/manifests/unfiltered.bdt.eclipse.manifest.mf" tofile="${bin.dir}/filtered.bdt.eclipse.manifest.mf" filtering="true" />
-		<copy file="${basedir}/manifests/unfiltered.bdt.osgitestrunner.manifest.mf" tofile="${bin.dir}/filtered.bdt.osgitestrunner.manifest.mf" filtering="true" />
 	</target>
 	
 	<target name="jar" depends="build,filtermanifests">
@@ -294,54 +303,7 @@
 				<attribute name="Implementation-Vendor" value="brunella ltd" />
 			</manifest>
 		</jar>
-		
-		<!-- uk.co.brunella.osgi.bdt.osgitestrunner -->
-		<jar destfile="${dist.dir}/uk.co.brunella.osgi.bdt.osgitestrunner-${version}.jar"
-			manifest="${bin.dir}/filtered.bdt.osgitestrunner.manifest.mf" filesetmanifest="merge">
-			<fileset dir="${bin.dir}">
-				<!-- JUnit 4.5 -->
-				<include name="org/junit/**"/>
-				<include name="junit/**"/>
-				<include name="org/hamcrest/**"/>
-				<!-- Test runner -->
-				<include name="uk/co/brunella/osgi/bdt/runner/result/*"/>
-				<include name="uk/co/brunella/osgi/bdt/osgitestrunner/*"/>
-			</fileset>
-			<manifest>
-				<attribute name="Specification-Title" value="OSGi BDT - Build Deploy Test Runner" />
-				<attribute name="Specification-Version" value="${version}" />
-				<attribute name="Specification-Vendor" value="brunella ltd" />
-				<attribute name="Implementation-Title" value="OSGi BDT - Build Deploy Test Runner" />
-				<attribute name="Implementation-Version" value="${version} ${TODAY}" />
-				<attribute name="Implementation-Vendor" value="brunella ltd" />
-			</manifest>
-		</jar>
-		<jar destfile="${dist.dir}/uk.co.brunella.osgi.bdt.osgitestrunner-source-${version}.jar">
-			<fileset dir="${src.dir}">
-				<!-- Test runner -->
-				<include name="uk/co/brunella/osgi/bdt/runner/result/*"/>
-				<include name="uk/co/brunella/osgi/bdt/osgitestrunner/*"/>
-			</fileset>
-			<fileset dir="${src-junit.dir}">
-				<!-- JUnit 4.5 -->
-				<include name="org/junit/**"/>
-				<include name="junit/**"/>
-				<include name="org/hamcrest/**"/>
-			</fileset>
-			<manifest>
-				<attribute name="Bundle-ManifestVersion" value="2" />
-				<attribute name="Bundle-SymbolicName" value="uk.co.brunella.osgi.bdt.osgitestrunner.source" />
-				<attribute name="Bundle-Version" value="${version}" />
-				<attribute name="Eclipse-SourceBundle" value='uk.co.brunella.osgi.bdt.osgitestrunner;version="${version}"' />
 
-				<attribute name="Specification-Title" value="OSGi BDT - Build Deploy Test Runner" />
-				<attribute name="Specification-Version" value="${version}" />
-				<attribute name="Specification-Vendor" value="brunella ltd" />
-				<attribute name="Implementation-Title" value="OSGi BDT - Build Deploy Test Runner" />
-				<attribute name="Implementation-Version" value="${version} ${TODAY}" />
-				<attribute name="Implementation-Vendor" value="brunella ltd" />
-			</manifest>
-		</jar>
 		<zip destfile="${dist.dir}/uk.co.brunella.osgi.bdt-full-${version}.zip">
 			<fileset dir="${basedir}">
 				<include name="**"/>
