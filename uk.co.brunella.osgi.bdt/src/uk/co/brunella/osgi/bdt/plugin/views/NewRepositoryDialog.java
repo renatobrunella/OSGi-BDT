@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
 import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
+import uk.co.brunella.osgi.bdt.repository.profile.Profile;
 
 public class NewRepositoryDialog extends Dialog {
 
@@ -62,7 +63,7 @@ public class NewRepositoryDialog extends Dialog {
       }
     });
     combo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-    String[] profileNames = BundleRepository.getProfileNameList();
+    String[] profileNames = Profile.getProfileNameList();
     for (String profileName : profileNames) {
       combo.add(profileName);
     }

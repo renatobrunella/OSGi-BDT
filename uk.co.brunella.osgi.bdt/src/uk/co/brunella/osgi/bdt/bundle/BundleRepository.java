@@ -20,7 +20,6 @@ package uk.co.brunella.osgi.bdt.bundle;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -35,28 +34,22 @@ import java.util.Set;
 
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor.ExportPackage;
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor.ImportPackage;
+import uk.co.brunella.osgi.bdt.repository.profile.Profile;
 
 public class BundleRepository implements Serializable {
 
   private static final long serialVersionUID = -8509546195436191224L;
 
-  private static volatile Map<String, Properties> profiles;
-  
-  static
-  {
-    profiles = getProfiles();
-  }
-  
   private List<BundleDescriptor> bundleDescriptors;
   private String profileName;
   // maps package name to a list of exported packages
-  private volatile Map<String, List<ExportPackage>> exportedPackages;
+  private transient Map<String, List<ExportPackage>> exportedPackages;
   // list of packages supplied by the system (JRE runtime)
-  private volatile Set<String> systemPackages = new HashSet<String>(0);
-  private volatile File location;
+  private transient Set<String> systemPackages = new HashSet<String>(0);
+  private transient File location;
 
   public BundleRepository(String profileName) {
-    if (!profiles.containsKey(profileName)) {
+    if (!Profile.isValidProfileName(profileName)) {
       throw new IllegalArgumentException("Invalid profile name: " + profileName);
     }
     this.profileName = profileName;
@@ -66,7 +59,7 @@ public class BundleRepository implements Serializable {
   }
 
   private void readSystemPackages() {
-    Properties profileProperties = profiles.get(profileName);
+    Properties profileProperties = Profile.getProfile(profileName);
     String[] packages = ((String) profileProperties.get("org.osgi.framework.system.packages")).split(",");
     systemPackages = new HashSet<String>(packages.length);
     for (String pkg : packages) {
@@ -212,52 +205,13 @@ public class BundleRepository implements Serializable {
   }
 
   public Properties getProfile() {
-    return profiles.get(profileName);
+    return Profile.getProfile(profileName);
   }
   
   private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
     ois.defaultReadObject();
     readSystemPackages();
     refreshExportPackages();
-  }
-
-  private static Properties readProperties(String fileName) {
-    InputStream is = BundleRepository.class.getClassLoader()
-        .getResourceAsStream(fileName);
-    Properties properties = new Properties();
-    try {
-      properties.load(is);
-      return properties;
-    } catch (IOException e) {
-      return null;
-    }
-  }
-  
-  private static Map<String, Properties> getProfiles() {
-    Properties profiles = readProperties("profiles/profile.list");
-    if (profiles == null) {
-      throw new RuntimeException("Could not read profiles properties");
-    }
-    String[] profileList = ((String)profiles.get("profiles")).trim().split(",");
-    Map<String, Properties> profilesMap = new HashMap<String, Properties>(profileList.length);
-    for (int i = 0; i < profileList.length; i++) {
-      Properties profileProperties = readProperties("profiles/" + profileList[i]);
-      String profileName = (String) profileProperties.get("osgi.java.profile.name");
-      profilesMap.put(profileName, profileProperties);
-    }
-    
-    return profilesMap;
-  }
-  
-  public static String[] getProfileNameList() {
-    Set<String> names = profiles.keySet();
-    String[] nameList = (String[]) names.toArray(new String[names.size()]);
-    Arrays.sort(nameList);
-    return nameList;
-  }
-  
-  public static boolean isValidProfileName(String profileName) {
-    return profiles.containsKey(profileName);
   }
 
   public String getProfileName() {

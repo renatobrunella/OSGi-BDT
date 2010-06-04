@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 - 2009 brunella ltd
+ * Copyright 2008 - 2010 brunella ltd
  *
  * Licensed under the GPL Version 3 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import uk.co.brunella.osgi.bdt.bundle.VersionRange;
 import uk.co.brunella.osgi.bdt.bundle.BundleDescriptor.ExportPackage;
 import uk.co.brunella.osgi.bdt.repository.BundleRepositoryPersister;
 import uk.co.brunella.osgi.bdt.repository.Deployer;
+import uk.co.brunella.osgi.bdt.repository.profile.Profile;
 
 public class Main {
 
@@ -151,7 +152,7 @@ public class Main {
   }
 
   private static boolean listProfiles() throws IOException {
-    for (String profileName : BundleRepository.getProfileNameList()) {
+    for (String profileName : Profile.getProfileNameList()) {
       System.out.println(profileName);
     }
     return true;
