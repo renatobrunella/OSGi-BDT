@@ -2,7 +2,7 @@
 <project basedir="." default="dist" name="uk.co.brunella.osgi.bdt">
 	<tstamp />
 
-	<property name="version" value="2.2.4" />
+	<property name="version" value="3.0.0" />
 	<property name="junit.version" value="4.5.0" />
 
 	<property name="debuglevel" value="source,lines,vars" />
@@ -11,9 +11,13 @@
 
 	<property name="bin.path" value="bin" />
 	<property name="bin.dir" value="${basedir}/${bin.path}" />
+	<property name="bin.test.path" value="bin-test" />
+	<property name="bin.test.dir" value="${basedir}/${bin.test.path}" />
 	<property name="src.dir" value="${basedir}/src" />
+	<property name="src.test.dir" value="${basedir}/test" />
 	<property name="src-junit.dir" value="${basedir}/src-junit" />
 	<property name="src-osgi.dir" value="${basedir}/src-osgi" />
+	<property name="junit.output.dir" value="${basedir}/junit" />
 	<property name="lib.path" value="lib" />
 	<property name="lib.dir" value="${basedir}/${lib.path}" />
 	<property name="build.lib.dir" value="${basedir}/build-lib" />
@@ -22,6 +26,7 @@
 
 	<path id="classpath">
 		<pathelement location="${bin.dir}" />
+		<pathelement location="${bin.test.dir}" />
 
         <fileset dir="${build.lib.dir}">
 		  <include name="**/*.jar"/>
@@ -30,12 +35,16 @@
 
 	<target name="init">
 		<mkdir dir="${bin.dir}" />
+		<mkdir dir="${bin.test.dir}" />
 		<mkdir dir="${dist.dir}" />
+		<mkdir dir="${junit.output.dir}" />
 	</target>
 
 	<target name="clean">
 		<delete dir="${bin.dir}" />
+		<delete dir="${bin.test.dir}" />
 		<delete dir="${dist.dir}" />
+		<delete dir="${junit.output.dir}" />
 		<delete file="${lib.dir}/uk.co.brunella.osgi.bdt.support.jar" />
 	</target>
 
@@ -52,6 +61,34 @@
 			srcdir="${src.dir}">
 			<classpath refid="classpath" />
 		</javac>
+		<javac debug="true" debuglevel="${debuglevel}" destdir="${bin.test.dir}" source="${source}" target="${target}"
+			srcdir="${src.test.dir}">
+			<classpath refid="classpath" />
+		</javac>
+	</target>
+	
+	<target name="junit" depends="build">
+		<junit fork="yes" printsummary="withOutAndErr" failureproperty="junit.failure" dir="${basedir}" >
+			<formatter type="xml" />
+			<batchtest todir="${junit.output.dir}">
+				<fileset dir="${bin.test.dir}" >
+					<include name="**/*Test.class" />
+					<include name="**/Test*.class" />
+				</fileset>
+			</batchtest>
+			<classpath refid="classpath" />
+		</junit>
+		<antcall target="junitreport" />
+		<fail if="junit.failure"/>
+	</target>
+
+	<target name="junitreport">
+		<junitreport todir="${junit.output.dir}">
+			<fileset dir="${junit.output.dir}">
+				<include name="TEST-*.xml" />
+			</fileset>
+			<report format="frames" todir="${junit.output.dir}" />
+		</junitreport>
 	</target>
 
 	<target name="filtermanifests" depends="init">
@@ -314,5 +351,5 @@
 		</zip>
 	</target>
 	
-	<target name="dist" depends="clean,build,jar" />
+	<target name="dist" depends="clean,build,junit,jar" />
 </project>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 brunella ltd
+ * Copyright 2008 - 2010 brunella ltd
  *
  * Licensed under the GPL Version 3 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ import java.io.IOException;
 
 import org.apache.tools.ant.BuildException;
 
-import uk.co.brunella.osgi.bdt.bundle.BundleRepository;
 import uk.co.brunella.osgi.bdt.repository.Deployer;
+import uk.co.brunella.osgi.bdt.repository.profile.Profile;
 
 public class OSGiCreate extends AbstractOSGiTask {
 
@@ -60,11 +60,11 @@ public class OSGiCreate extends AbstractOSGiTask {
   }
 
   public void setProfileName(String profileName) {
-    if (!BundleRepository.isValidProfileName(profileName)) {
+    if (!Profile.isValidProfileName(profileName)) {
       StringBuilder sb = new StringBuilder();
       sb.append("Invalid profile name: ").append(profileName).append('\n');
       sb.append("Allowed are:\n");
-      for (String name : BundleRepository.getProfileNameList()) {
+      for (String name : Profile.getProfileNameList()) {
         sb.append("  ").append(name).append("\n");
       }
       throw new BuildException(sb.toString());
