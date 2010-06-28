@@ -163,11 +163,11 @@ public class OSGiPath extends Path {
         if (exportDescriptor != null) {
           File path = new File(repositoryDirectory, "packages" + File.separator + 
               exportDescriptor.getBundleSymbolicName() + File.separator + exportDescriptor.getBundleVersion() +
-              File.separator + exportPackage.getName() + File.separator + exportPackage.getVersion());
+              File.separator + exportPackage.getName());
           if (verbose) {
-            log("\t" + path.toString());
+            log("\t" + path.toString() + File.separator + exportPackage.getVersion());
           }
-          createPathElement().setPath(path.toString());
+          createPathElement().setPath(path.toString() + File.separator + exportPackage.getVersion() + ".jar");
         }
       }
     }

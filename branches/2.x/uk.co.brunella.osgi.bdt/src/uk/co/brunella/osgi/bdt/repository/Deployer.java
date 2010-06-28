@@ -18,7 +18,11 @@
  */
 package uk.co.brunella.osgi.bdt.repository;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -26,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.osgi.framework.Constants;
 
@@ -256,21 +262,41 @@ public class Deployer {
     ExportClassFilter classFilter = new ExportClassFilter(exportPackage); 
     String packageName = exportPackage.getName();
     Version packageVersion = exportPackage.getVersion();
-    File directory = new File(packageDirectory, packageName + File.separator + packageVersion.toString());
+    File directory = new File(packageDirectory, packageName);
     directory.mkdirs();
+    
     String namePath = packageName.replace('.', File.separatorChar);
     for (File basePath : classPaths) {
       File packagePath = new File(basePath, namePath);
       File[] children = packagePath.listFiles();
-      File destPath = new File(directory, namePath);
-      destPath.mkdirs();
-      if (children != null) {
-        for (File child : children) {
-          if (child.isFile() && child.getName().endsWith(CLASS_FILE_EXTENSION)) {
-            if (classFilter.isClassFileExported(child.getName())) {
-              File dest = new File(destPath, child.getName());
-              FileUtils.copyFile(child, dest);
+      if (children != null && children.length > 0) {
+        byte buffer[] = new byte[2048];
+        ZipOutputStream zipOout = null;
+        try {
+          for (File child : children) {
+            if (child.isFile() && child.getName().endsWith(CLASS_FILE_EXTENSION)) {
+              if (classFilter.isClassFileExported(child.getName())) {
+                if (zipOout == null) {
+                  zipOout = new ZipOutputStream(new BufferedOutputStream(
+                      new FileOutputStream(new File(directory, packageVersion.toString() + ".jar"))));
+                }
+                ZipEntry entry = new ZipEntry(namePath + File.separatorChar + child.getName());
+                zipOout.putNextEntry(entry);
+                BufferedInputStream classFile = new BufferedInputStream(new FileInputStream(child), buffer.length);
+                try {
+                  int count;
+                  while((count = classFile.read(buffer, 0, buffer.length)) != -1) {
+                     zipOout.write(buffer, 0, count);
+                  }
+                } finally {
+                  classFile.close();
+                }
+              }
             }
+          }
+        } finally {
+          if (zipOout != null) {
+            zipOout.close();
           }
         }
       }
